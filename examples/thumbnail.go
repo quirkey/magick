@@ -3,7 +3,8 @@ package main
 import (
   "log"
   "os"
-  magick "../magick"
+  "time"
+  "quirkey/magick"
 )
 
 func main() {
@@ -17,10 +18,10 @@ func main() {
     log.Printf("Error reading from file")
     os.Exit(1)
   }
-  log.Print("Transforming")
-  image.Transform("100>x", "100x100")
+  // log.Print("Transforming")
+  // image.Transform("100>x", "100x100")
   log.Printf("Writing to %s", output)
-  ok = magick.ToFile(output)
+  ok = image.ToFile(output)
   if !ok {
     log.Printf("Error reading from file")
     os.Exit(1)
