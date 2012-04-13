@@ -68,6 +68,7 @@ func NewFromFile(filename string) (im *MagickImage, ok bool) {
 	image := C.ReadImage(imageInfo, exception)
 	C.CatchException(exception)
 	im = &MagickImage{image, exception, imageInfo}
+        ok = true
 	return
 }
 
@@ -79,9 +80,15 @@ func NewFromFile(filename string) (im *MagickImage, ok bool) {
 
 // }
 
-// func (im *MagickImage) ToBlob() (blob []byte, ok bool) {
-
-// }
+func (im *MagickImage) ToBlob() (blob []byte, ok bool) {
+	new_image_info := C.AcquireImageInfo()
+	var outlength (C.size_t)
+	outblob := C.ImageToBlob(new_image_info, im.image, &outlength, im.exception)
+	C.CatchException(im.exception)
+	log.Printf("Write Success %d", outlength)
+	char_pointer := unsafe.Pointer(outblob)
+	return C.GoBytes(char_pointer, (C.int)(outlength)), true
+}
 
 func (im *MagickImage) ToFile(filename string) (ok bool) {
 	c_outpath := C.CString(filename)
