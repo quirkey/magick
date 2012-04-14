@@ -63,7 +63,6 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
       exception->exceptions);
   }
   UnlockSemaphoreInfo(exception->semaphore);
-  ClearMagickException(exception);
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
 */
