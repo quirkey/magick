@@ -4,6 +4,8 @@ package magick
 #cgo pkg-config: MagickCore
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <magick/MagickCore.h>
 
 void SetImageInfoFilename(ImageInfo *image_info, char *filename) 
@@ -33,6 +35,36 @@ Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length) {
   image = ReadImage(image_info, exception);
   CatchException(exception);
   return image;
+}
+
+MagickBooleanType CheckException(ExceptionInfo *exception)
+{
+  register const ExceptionInfo
+    *p;
+  int haserr = 0;
+
+  assert(exception != (ExceptionInfo *) NULL);
+  assert(exception->signature == MagickSignature);
+  if (exception->exceptions  == (void *) NULL)
+    return MagickFalse;
+  LockSemaphoreInfo(exception->semaphore);
+  ResetLinkedListIterator((LinkedListInfo *) exception->exceptions);
+  p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
+    exception->exceptions);
+  while (p != (const ExceptionInfo *) NULL)
+  {
+    if ((p->severity >= WarningException) && (p->severity < ErrorException))
+      haserr = 1;
+    if ((p->severity >= ErrorException) && (p->severity < FatalErrorException))
+      haserr = 1;
+    if (p->severity >= FatalErrorException)
+      haserr = 1;
+    p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
+      exception->exceptions);
+  }
+  UnlockSemaphoreInfo(exception->semaphore);
+  ClearMagickException(exception);
+  return haserr == 0 ? MagickFalse : MagickTrue;
 }
 */
 import "C"
@@ -66,9 +98,13 @@ func NewFromFile(filename string) (im *MagickImage, ok bool) {
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(imageInfo, c_filename)
 	image := C.ReadImage(imageInfo, exception)
-	C.CatchException(exception)
-	im = &MagickImage{image, exception, imageInfo}
-        ok = true
+	failed := C.CheckException(exception)
+	if failed == C.MagickTrue {
+		ok = false
+	} else {
+		im = &MagickImage{image, exception, imageInfo}
+		ok = true
+	}
 	return
 }
 
