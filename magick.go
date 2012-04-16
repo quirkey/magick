@@ -145,21 +145,25 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 
 // }
 
-func (im *MagickImage) ToBlob() (blob []byte, ok bool) {
+func (im *MagickImage) ToBlob() (blob []byte, err error) {
 	new_image_info := C.AcquireImageInfo()
 	var outlength (C.size_t)
 	outblob := C.ImageToBlob(new_image_info, im.Image, &outlength, im.exception)
-	C.CatchException(im.exception)
-	log.Printf("Write Success %d", outlength)
+	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(im.exception)
+	}
 	char_pointer := unsafe.Pointer(outblob)
-	return C.GoBytes(char_pointer, (C.int)(outlength)), true
+	return C.GoBytes(char_pointer, (C.int)(outlength)), nil
 }
 
-func (im *MagickImage) ToFile(filename string) (ok bool) {
+func (im *MagickImage) ToFile(filename string) (ok bool, err error) {
 	c_outpath := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_outpath))
 	success := C.ImageToFile(im.Image, c_outpath, im.exception)
 	C.CatchException(im.exception)
+	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
+		return false, ErrorFromExceptionInfo(im.exception)
+	}
 	if success == C.MagickTrue {
 		ok = true
 	}

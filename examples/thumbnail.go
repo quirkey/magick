@@ -4,7 +4,6 @@ import (
   "log"
   "os"
   "time"
-  "fmt"
   "quirkey/magick"
 )
 
@@ -14,18 +13,17 @@ func main() {
   log.Printf("Reading from file %s", input)
   output := os.Args[2]
 
-  image, ok := magick.NewFromFile(input)
-  if !ok {
-    log.Printf("Error reading from file")
+  image, err := magick.NewFromFile(input)
+  if err != nil {
+    log.Printf("Error reading from file %s", err.Error())
     os.Exit(1)
   }
   // log.Print("Transforming")
   // image.Transform("100>x", "100x100")
   log.Printf("Writing to %s", output)
-  blob, ok := image.ToBlob()
-  fmt.Print(string(blob))
-  if !ok {
-    log.Printf("Error reading from file")
+  _, err = image.ToFile(output)
+  if err != nil {
+    log.Printf("Error outputing file: %s", err.Error())
     os.Exit(1)
   }
   end := time.Now()
