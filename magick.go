@@ -141,9 +141,17 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	return &MagickImage{image, exception, imageInfo}, nil
 }
 
-// func (im *MagickImage) Transform(crop_geometry, image_geometry string) (ok bool) {
-
-// }
+func (im *MagickImage) Transform(crop_geometry, image_geometry string) (ok bool) {
+	c_crop_geometry := C.CString(crop_geometry)
+	c_image_geometry := C.CString(image_geometry)
+	defer C.free(unsafe.Pointer(c_crop_geometry))
+	defer C.free(unsafe.Pointer(c_image_geometry))
+	success := C.TransformImage(&im.Image, c_crop_geometry, c_image_geometry)
+	if success != C.MagickTrue {
+          ok = true
+	}
+        return
+}
 
 func (im *MagickImage) ToBlob() (blob []byte, err error) {
 	new_image_info := C.AcquireImageInfo()

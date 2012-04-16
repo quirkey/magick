@@ -18,10 +18,14 @@ func main() {
 		log.Printf("Error reading from file %s", err.Error())
 		os.Exit(1)
 	}
-	// log.Print("Transforming")
-	// image.Transform("100>x", "100x100")
+	log.Print("Transforming")
+	ok := image.Transform("", "100x100")
+        if !ok {
+          log.Print("Problem with transforming")
+          os.Exit(1)
+        }
 	log.Printf("Writing to %s", output)
-	ok, err := image.ToFile(output)
+	ok, err = image.ToFile(output)
 	log.Printf("Wrote to %s %b", output, ok)
 	if err != nil {
 		log.Printf("Error outputing file: %s", err.Error())
