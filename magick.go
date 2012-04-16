@@ -85,31 +85,61 @@ func init() {
 }
 
 type MagickImage struct {
-	image     (*C.Image)
+	Image (*C.Image)
+
 	exception (*C.ExceptionInfo)
 	imageInfo (*C.ImageInfo)
 }
 
-func NewFromFile(filename string) (im *MagickImage, ok bool) {
+type MagickError struct {
+	Severity    string
+	Reason      string
+	Description string
+}
+
+func (err *MagickError) Error() string {
+	return "MagickError " + err.Severity + ": " + err.Reason + "- " + err.Description
+}
+
+func ErrorFromExceptionInfo(exception *C.ExceptionInfo) (err error) {
+	return &MagickError{string(exception.severity), C.GoString(exception.reason), C.GoString(exception.description)}
+}
+
+func NewFromFile(filename string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
 	imageInfo := C.AcquireImageInfo()
 	c_filename := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(imageInfo, c_filename)
 	image := C.ReadImage(imageInfo, exception)
-	failed := C.CheckException(exception)
-	if failed == C.MagickTrue {
-		ok = false
-	} else {
-		im = &MagickImage{image, exception, imageInfo}
-		ok = true
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
 	}
-	return
+	return &MagickImage{image, exception, imageInfo}, nil
 }
 
-// func NewFromBlob(blob []byte) (im *MagickImage, ok bool) {
-
-// }
+func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
+	imageInfo := C.AcquireImageInfo()
+	c_filename := C.CString("image." + extension)
+	defer C.free(unsafe.Pointer(c_filename))
+	exception := C.AcquireExceptionInfo()
+	C.SetImageInfoFilename(imageInfo, c_filename)
+	var success (C.MagickBooleanType)
+	success = C.SetImageInfo(imageInfo, 1, exception)
+	if success != C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
+	}
+	success = C.GetBlobSupport(imageInfo)
+	if success != C.MagickTrue {
+		return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs"}
+	}
+	length := (C.size_t)(len(blob))
+	image := C.ReadImageFromBlob(imageInfo, unsafe.Pointer(&blob[0]), length)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
+	}
+	return &MagickImage{image, exception, imageInfo}, nil
+}
 
 // func (im *MagickImage) Transform(crop_geometry, image_geometry string) (ok bool) {
 
@@ -118,7 +148,7 @@ func NewFromFile(filename string) (im *MagickImage, ok bool) {
 func (im *MagickImage) ToBlob() (blob []byte, ok bool) {
 	new_image_info := C.AcquireImageInfo()
 	var outlength (C.size_t)
-	outblob := C.ImageToBlob(new_image_info, im.image, &outlength, im.exception)
+	outblob := C.ImageToBlob(new_image_info, im.Image, &outlength, im.exception)
 	C.CatchException(im.exception)
 	log.Printf("Write Success %d", outlength)
 	char_pointer := unsafe.Pointer(outblob)
@@ -128,7 +158,7 @@ func (im *MagickImage) ToBlob() (blob []byte, ok bool) {
 func (im *MagickImage) ToFile(filename string) (ok bool) {
 	c_outpath := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_outpath))
-	success := C.ImageToFile(im.image, c_outpath, im.exception)
+	success := C.ImageToFile(im.Image, c_outpath, im.exception)
 	C.CatchException(im.exception)
 	if success == C.MagickTrue {
 		ok = true
