@@ -147,7 +147,7 @@ func (im *MagickImage) Transform(crop_geometry, image_geometry string) (ok bool)
 	defer C.free(unsafe.Pointer(c_crop_geometry))
 	defer C.free(unsafe.Pointer(c_image_geometry))
 	success := C.TransformImage(&im.Image, c_crop_geometry, c_image_geometry)
-	if success != C.MagickTrue {
+	if success == C.MagickTrue {
           ok = true
 	}
         return
