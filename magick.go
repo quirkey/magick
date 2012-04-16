@@ -159,8 +159,9 @@ func (im *MagickImage) ToBlob() (blob []byte, err error) {
 func (im *MagickImage) ToFile(filename string) (ok bool, err error) {
 	c_outpath := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_outpath))
-	success := C.ImageToFile(im.Image, c_outpath, im.exception)
-	C.CatchException(im.exception)
+	write_info := C.AcquireImageInfo()
+	C.SetImageInfoFilename(im.imageInfo, c_outpath)
+	success := C.WriteImages(write_info, im.Image, c_outpath, im.exception)
 	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
 		return false, ErrorFromExceptionInfo(im.exception)
 	}
