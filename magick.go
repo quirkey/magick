@@ -148,9 +148,20 @@ func (im *MagickImage) Transform(crop_geometry, image_geometry string) (ok bool)
 	defer C.free(unsafe.Pointer(c_image_geometry))
 	success := C.TransformImage(&im.Image, c_crop_geometry, c_image_geometry)
 	if success == C.MagickTrue {
-          ok = true
+		ok = true
 	}
-        return
+	C.CheckException(im.exception)
+	return
+}
+
+func (im *MagickImage) Thumbnail(width, height int) (resized *MagickImage, err error) {
+	c_cols := (C.size_t)(width)
+	c_rows := (C.size_t)(height)
+	new_image := C.ThumbnailImage(im.Image, c_cols, c_rows, im.exception)
+	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(im.exception)
+	}
+	return &MagickImage{new_image, im.exception, C.AcquireImageInfo()}, nil
 }
 
 func (im *MagickImage) ToBlob() (blob []byte, err error) {

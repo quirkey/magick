@@ -19,13 +19,13 @@ func main() {
 		os.Exit(1)
 	}
 	log.Print("Transforming")
-	ok := image.Transform("", "100x100")
-        if !ok {
-          log.Print("Problem with transforming")
-          os.Exit(1)
-        }
+	new_image, err := image.Thumbnail(100, 100)
+	if err != nil {
+		log.Print("Problem with transforming")
+		os.Exit(1)
+	}
 	log.Printf("Writing to %s", output)
-	ok, err = image.ToFile(output)
+	ok, err := new_image.ToFile(output)
 	log.Printf("Wrote to %s %b", output, ok)
 	if err != nil {
 		log.Printf("Error outputing file: %s", err.Error())
