@@ -65,6 +65,10 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   UnlockSemaphoreInfo(exception->semaphore);
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
+
+MagickBooleanType SetBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) {
+    return QueryColorDatabase(colorname, &image->background_color, exception);
+}
 */
 import "C"
 import (
@@ -162,6 +166,31 @@ func (im *MagickImage) Thumbnail(width, height int) (resized *MagickImage, err e
 		return nil, ErrorFromExceptionInfo(im.exception)
 	}
 	return &MagickImage{new_image, im.exception, C.AcquireImageInfo()}, nil
+}
+
+func (im *MagickImage) Shadow(opacity, sigma float32, xoffset, yoffset int) (shadowed *MagickImage, err error) {
+        c_opacity := (C.double)(opacity)
+        c_sigma := (C.double)(sigma)
+	c_x := (C.ssize_t)(xoffset)
+	c_y := (C.ssize_t)(yoffset)
+	new_image := C.ShadowImage(im.Image, c_opacity, c_sigma, c_x, c_y, im.exception)
+	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(im.exception)
+	}
+	return &MagickImage{new_image, im.exception, C.AcquireImageInfo()}, nil
+}
+
+func (im *MagickImage) FillBackgroundColor(color string) (ok bool) {
+        c_color := C.CString(color)
+	defer C.free(unsafe.Pointer(c_color))
+        success := C.SetBackgroundColor(im.Image, c_color, im.exception)
+        if success == C.MagickTrue {
+          success = C.SetImageBackgroundColor(im.Image)
+          if success == C.MagickTrue {
+              ok = true
+          }
+        }
+        return
 }
 
 func (im *MagickImage) ToBlob() (blob []byte, err error) {
