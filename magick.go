@@ -80,7 +80,7 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
       return MagickFalse;
     }
     AppendImageToList(&new_image, image);    
-    return MergeImageLayers(new_image, FlattenLayer, exception);
+    return MergeImageLayers(new_image, MergeLayer, exception);
 }
 
 Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
