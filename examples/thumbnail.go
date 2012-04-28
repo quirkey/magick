@@ -24,7 +24,8 @@ func main() {
 		log.Print("Problem with transforming")
 		os.Exit(1)
 	}
-        if !new_image.FillBackgroundColor("black") {
+        new_image, err = new_image.FillBackgroundColor("#333")
+        if err != nil {
                 log.Print("Problem setting background")
                 os.Exit(1)
         }
