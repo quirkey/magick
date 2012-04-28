@@ -24,16 +24,16 @@ func main() {
 		log.Print("Problem with transforming")
 		os.Exit(1)
 	}
-        new_image, err = new_image.FillBackgroundColor("#333")
-        if err != nil {
-                log.Print("Problem setting background")
-                os.Exit(1)
-        }
-	// new_image, err = new_image.Shadow(0.8, 0, 2, 2)
-	// if err != nil {
-	// 	log.Print("Problem with transforming")
-	// 	os.Exit(1)
-	// }
+	 new_image, err = new_image.Shadow("#000", 75, 5, 2, 2)
+	 if err != nil {
+	 	log.Print("Problem with transforming")
+	 	os.Exit(1)
+	 }
+        // new_image, err = new_image.FillBackgroundColor("#333")
+        // if err != nil {
+        //         log.Print("Problem setting background")
+        //         os.Exit(1)
+        // }
 	log.Printf("Writing to %s", output)
 	ok, err := new_image.ToFile(output)
 	log.Printf("Wrote to %s %b", output, ok)

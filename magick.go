@@ -82,6 +82,25 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     AppendImageToList(&new_image, image);    
     return MergeImageLayers(new_image, FlattenLayer, exception);
 }
+
+Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
+  const double sigma,const ssize_t x_offset,const ssize_t y_offset,
+  ExceptionInfo *exception) {
+
+  Image *new_image;
+  Image *shadow_image;
+  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+  if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
+    return MagickFalse;
+  }
+  shadow_image = ShadowImage(new_image, opacity, sigma, x_offset, y_offset, exception);
+  AppendImageToList(&shadow_image, image);    
+  if (SetBackgroundColor(shadow_image, "none", exception) == MagickFalse) {
+    return MagickFalse;
+  }
+  return MergeImageLayers(shadow_image, MergeLayer, exception);
+}
+ 
 */
 import "C"
 import (
@@ -188,8 +207,7 @@ func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yof
 	c_y := (C.ssize_t)(yoffset)
         c_color := C.CString(color)
 	defer C.free(unsafe.Pointer(c_color))
-        C.SetBackgroundColor(im.Image, c_color, im.exception)
-	new_image := C.ShadowImage(im.Image, c_opacity, c_sigma, c_x, c_y, im.exception)
+	new_image := C.AddShadowToImage(im.Image, c_color, c_opacity, c_sigma, c_x, c_y, im.exception)
 	if failed := C.CheckException(im.exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(im.exception)
 	}
