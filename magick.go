@@ -128,6 +128,10 @@ type MagickImage struct {
 	Info      (*C.ImageInfo)
 }
 
+type MagickGeometry struct {
+	Width, Height, Xoffset, Yoffset int
+}
+
 type MagickError struct {
 	Severity    string
 	Reason      string
@@ -176,6 +180,25 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
 	return &MagickImage{image, exception, info}, nil
+}
+
+func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
+	c_geometry := C.CString(geometry)
+	defer C.free(unsafe.Pointer(c_geometry))
+	exception := C.AcquireExceptionInfo()
+	C.ParseRegionGeometry(im.Image, c_geometry, &info, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		err = ErrorFromExceptionInfo(exception)
+	}
+	return
+}
+
+func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err error) {
+	rectangle, err := im.ParseGeometryToRectangleInfo(geometry)
+	if err != nil {
+		return nil, err
+	}
+	return &MagickGeometry{int(rectangle.width), int(rectangle.height), int(rectangle.x), int(rectangle.y)}, nil
 }
 
 func (im *MagickImage) Thumbnail(width, height int) (resized *MagickImage, err error) {

@@ -24,3 +24,15 @@ func TestImageFromBlob(t *testing.T) {
 	assert.T(t, error == nil)
 	assert.T(t, image != nil)
 }
+
+func TestParseGeometry(t *testing.T) {
+	filename := "test/heart_original.png"
+	image, error := NewFromFile(filename)
+	assert.T(t, error == nil)
+	assert.T(t, image != nil)
+
+	geometry, err := image.ParseGeometry("100x100>")
+	assert.T(t, err == nil)
+	assert.T(t, geometry != nil)
+	assert.Equal(t, 100, geometry.Width)
+}
