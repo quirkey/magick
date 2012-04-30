@@ -125,7 +125,7 @@ type MagickImage struct {
 	Image (*C.Image)
 
 	Exception (*C.ExceptionInfo)
-	Info (*C.ImageInfo)
+	Info      (*C.ImageInfo)
 }
 
 type MagickError struct {
@@ -233,7 +233,7 @@ func (im *MagickImage) ToFile(filename string) (err error) {
 		return ErrorFromExceptionInfo(im.Exception)
 	}
 	if success != C.MagickTrue {
-	        return &MagickError{
+		return &MagickError{"fatal", "", "could not write to " + filename + " for unknown reason"}
 	}
-        return nil
+	return nil
 }
