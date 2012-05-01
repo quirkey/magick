@@ -211,6 +211,18 @@ func (im *MagickImage) Thumbnail(width, height int) (resized *MagickImage, err e
 	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
 }
 
+func (im *MagickImage) Crop(geometry string) (cropped *MagickImage, err error) {
+	rect, err := im.ParseGeometryToRectangleInfo(geometry)
+	if err != nil {
+		return nil, err
+	}
+	new_image := C.CropImage(im.Image, &rect, im.Exception)
+	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(im.Exception)
+	}
+	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
+}
+
 func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yoffset int) (shadowed *MagickImage, err error) {
 	c_opacity := (C.double)(opacity)
 	c_sigma := (C.double)(sigma)

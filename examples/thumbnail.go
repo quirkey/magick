@@ -20,12 +20,12 @@ func main() {
 	}
 	log.Print("Transforming")
 	var new_image *magick.MagickImage
-	// new_image, err := image.Thumbnail(100, 100)
-	// if err != nil {
-	// 	log.Print("Problem with transforming")
-	// 	os.Exit(1)
-	// }
-	new_image, err = image.Shadow("#000", 75, 5, 2, 2)
+	new_image, err = image.Thumbnail(100, 100)
+	if err != nil {
+		log.Print("Problem with transforming")
+		os.Exit(1)
+	}
+	// new_image, err = new_image.Shadow("#000", 75, 5, 2, 2)
 	if err != nil {
 		log.Print("Problem with transforming")
 		os.Exit(1)
@@ -36,12 +36,12 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("Writing to %s", output)
-	err := new_image.ToFile(output)
+	err = new_image.ToFile(output)
 	if err != nil {
 		log.Printf("Error outputing file: %s", err.Error())
 		os.Exit(1)
 	}
-	log.Printf("Wrote to %s %b", output, ok)
+	log.Printf("Wrote to %s %b", output)
 	end := time.Now()
 	log.Printf("Done. took %v\n", end.Sub(start))
 }

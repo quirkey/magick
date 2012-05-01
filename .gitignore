@@ -1,4 +1,4 @@
 magick
 _obj
-test/*_out.png
+test/*_out.*
 .DS_Store
