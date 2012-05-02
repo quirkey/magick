@@ -192,9 +192,14 @@ func (im *MagickImage) Destroy() (err error) {
 	return
 }
 
-func (im *MagickImage) Width() (int) {
-        return (int)(im.Image.columns)
+func (im *MagickImage) Width() int {
+	return (int)(im.Image.columns)
 }
+
+func (im *MagickImage) Height() int {
+	return (int)(im.Image.rows)
+}
+
 func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
@@ -223,10 +228,10 @@ func (im *MagickImage) Resize(geometry string) (err error) {
 	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(im.Exception)
 	}
-        im.Destroy()
-        im.Image = new_image
-        im.Info = C.AcquireImageInfo()
-        im.Exception = C.AcquireExceptionInfo()
+	im.Destroy()
+	im.Image = new_image
+	im.Info = C.AcquireImageInfo()
+	im.Exception = C.AcquireExceptionInfo()
 	return nil
 }
 
