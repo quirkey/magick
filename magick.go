@@ -184,8 +184,11 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 
 func (im *MagickImage) Destroy() (err error) {
 	C.DestroyImageInfo(im.Info)
+	im.Info = nil
 	C.DestroyExceptionInfo(im.Exception)
+	im.Exception = nil
 	C.DestroyImage(im.Image)
+	im.Image = nil
 	return
 }
 

@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func setupImage(t *testing.T) (image *MagickImage) {
+	filename := "test/heart_original.png"
+	image, error := NewFromFile(filename)
+	assert.T(t, error == nil)
+	assert.T(t, image != nil)
+	return
+}
+
 func TestImageFromFile(t *testing.T) {
 	filename := "test/heart_original.png"
 	image, error := NewFromFile(filename)
@@ -26,13 +34,15 @@ func TestImageFromBlob(t *testing.T) {
 }
 
 func TestParseGeometry(t *testing.T) {
-	filename := "test/heart_original.png"
-	image, error := NewFromFile(filename)
-	assert.T(t, error == nil)
-	assert.T(t, image != nil)
-
+	image := setupImage(t)
 	geometry, err := image.ParseGeometry("100x100>")
 	assert.T(t, err == nil)
 	assert.T(t, geometry != nil)
 	assert.Equal(t, 100, geometry.Width)
+}
+
+func TestDestroy(t *testing.T) {
+	image := setupImage(t)
+	assert.T(t, image.Destroy() == nil)
+	assert.T(t, image.Image == nil)
 }
