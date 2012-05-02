@@ -90,6 +90,7 @@ func TestToBlob(t *testing.T) {
 	assert.T(t, err == nil)
 	assert.T(t, bytes != nil)
 	assert.T(t, len(bytes) > 0)
+	assert.Equal(t, 477575, len(bytes))
 }
 
 func TestToFile(t *testing.T) {
@@ -103,4 +104,5 @@ func TestToFile(t *testing.T) {
 	defer file.Close()
 	stat, err := file.Stat()
 	assert.T(t, stat != nil)
+	assert.Equal(t, (int64)(477575), stat.Size())
 }
