@@ -21,6 +21,7 @@ MagickBooleanType GetBlobSupport(ImageInfo *image_info)
   exception = AcquireExceptionInfo();
   magick_info = GetMagickInfo(image_info->magick,exception);
   CatchException(exception);
+  DestroyExceptionInfo(exception);
   return GetMagickBlobSupport(magick_info);
 }
 
@@ -35,6 +36,7 @@ Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
   image_info->length = length;
   image = ReadImage(image_info, exception);
   CatchException(exception);
+  DestroyExceptionInfo(exception);
   return image;
 }
 
@@ -123,9 +125,6 @@ func init() {
 
 type MagickImage struct {
 	Image (*C.Image)
-
-	Exception (*C.ExceptionInfo)
-	Info      (*C.ImageInfo)
 }
 
 type MagickGeometry struct {
@@ -148,7 +147,9 @@ func ErrorFromExceptionInfo(exception *C.ExceptionInfo) (err error) {
 
 func NewFromFile(filename string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
+	defer C.DestroyImageInfo(info)
 	c_filename := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
@@ -156,14 +157,16 @@ func NewFromFile(filename string) (im *MagickImage, err error) {
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
-	return &MagickImage{image, exception, info}, nil
+	return &MagickImage{image}, nil
 }
 
 func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
+	defer C.DestroyImageInfo(info)
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
-	exception := C.AcquireExceptionInfo()
 	C.SetImageInfoFilename(info, c_filename)
 	var success (C.MagickBooleanType)
 	success = C.SetImageInfo(info, 1, exception)
@@ -179,14 +182,10 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
-	return &MagickImage{image, exception, info}, nil
+	return &MagickImage{image}, nil
 }
 
 func (im *MagickImage) Destroy() (err error) {
-	C.DestroyImageInfo(im.Info)
-	im.Info = nil
-	C.DestroyExceptionInfo(im.Exception)
-	im.Exception = nil
 	C.DestroyImage(im.Image)
 	im.Image = nil
 	return
@@ -204,6 +203,7 @@ func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.Re
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
 	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	C.ParseRegionGeometry(im.Image, c_geometry, &info, exception)
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		err = ErrorFromExceptionInfo(exception)
@@ -220,31 +220,35 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 }
 
 func (im *MagickImage) Resize(geometry string) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	rect, err := im.ParseGeometryToRectangleInfo(geometry)
 	if err != nil {
 		return err
 	}
-	new_image := C.ThumbnailImage(im.Image, rect.width, rect.height, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return ErrorFromExceptionInfo(im.Exception)
+	new_image := C.ThumbnailImage(im.Image, rect.width, rect.height, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
 	}
 	im.Destroy()
 	im.Image = new_image
-	im.Info = C.AcquireImageInfo()
-	im.Exception = C.AcquireExceptionInfo()
 	return nil
 }
 
-func (im *MagickImage) Crop(geometry string) (cropped *MagickImage, err error) {
+func (im *MagickImage) Crop(geometry string) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	rect, err := im.ParseGeometryToRectangleInfo(geometry)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	new_image := C.CropImage(im.Image, &rect, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return nil, ErrorFromExceptionInfo(im.Exception)
+	new_image := C.CropImage(im.Image, &rect, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
 	}
-	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
+	im.Destroy()
+	im.Image = new_image
+	return nil
 }
 
 func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yoffset int) (shadowed *MagickImage, err error) {
@@ -271,7 +275,7 @@ func (im *MagickImage) FillBackgroundColor(color string) (flattened *MagickImage
 	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
 }
 
-func (im *MagickImage) ToBlob() (blob []byte, err error) {
+func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
 	new_image_info := C.AcquireImageInfo()
 	var outlength (C.size_t)
 	outblob := C.ImageToBlob(new_image_info, im.Image, &outlength, im.Exception)
