@@ -62,7 +62,7 @@ func TestResize(t *testing.T) {
 
 func TestCrop(t *testing.T) {
 	image := setupImage(t)
-	err := image.Crop("100x100+10+10")
+	err := image.Crop("100x100!+10+10")
 	assert.T(t, err == nil)
 	assert.Equal(t, 100, image.Width())
 	assert.Equal(t, 100, image.Height())
@@ -89,7 +89,7 @@ func TestToBlob(t *testing.T) {
 	bytes, err := image.ToBlob("png")
 	assert.T(t, err == nil)
 	assert.T(t, bytes != nil)
-	assert.Equal(t, image.Size(), len(blob))
+	assert.T(t, len(bytes) > 0)
 }
 
 func TestToFile(t *testing.T) {
@@ -101,6 +101,6 @@ func TestToFile(t *testing.T) {
 	file, err := os.Open(filename)
 	assert.T(t, err == nil)
 	defer file.Close()
-	stat := file.Stat()
+	stat, err := file.Stat()
 	assert.T(t, stat != nil)
 }

@@ -251,49 +251,66 @@ func (im *MagickImage) Crop(geometry string) (err error) {
 	return nil
 }
 
-func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yoffset int) (shadowed *MagickImage, err error) {
+func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yoffset int) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	c_opacity := (C.double)(opacity)
 	c_sigma := (C.double)(sigma)
 	c_x := (C.ssize_t)(xoffset)
 	c_y := (C.ssize_t)(yoffset)
 	c_color := C.CString(color)
 	defer C.free(unsafe.Pointer(c_color))
-	new_image := C.AddShadowToImage(im.Image, c_color, c_opacity, c_sigma, c_x, c_y, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return nil, ErrorFromExceptionInfo(im.Exception)
+	new_image := C.AddShadowToImage(im.Image, c_color, c_opacity, c_sigma, c_x, c_y, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
 	}
-	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
+	im.Destroy()
+	im.Image = new_image
+	return nil
 }
 
-func (im *MagickImage) FillBackgroundColor(color string) (flattened *MagickImage, err error) {
+func (im *MagickImage) FillBackgroundColor(color string) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	c_color := C.CString(color)
 	defer C.free(unsafe.Pointer(c_color))
-	new_image := C.FillBackgroundColor(im.Image, c_color, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return nil, ErrorFromExceptionInfo(im.Exception)
+	new_image := C.FillBackgroundColor(im.Image, c_color, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
 	}
-	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
+	im.Destroy()
+	im.Image = new_image
+	return nil
 }
 
 func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
-	new_image_info := C.AcquireImageInfo()
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	image_info := C.AcquireImageInfo()
+	defer C.DestroyImageInfo(image_info)
+	c_outpath := C.CString("image." + filetype)
+	defer C.free(unsafe.Pointer(c_outpath))
+	C.SetImageInfoFilename(image_info, c_outpath)
 	var outlength (C.size_t)
-	outblob := C.ImageToBlob(new_image_info, im.Image, &outlength, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return nil, ErrorFromExceptionInfo(im.Exception)
+	outblob := C.ImageToBlob(image_info, im.Image, &outlength, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
 	}
 	char_pointer := unsafe.Pointer(outblob)
 	return C.GoBytes(char_pointer, (C.int)(outlength)), nil
 }
 
 func (im *MagickImage) ToFile(filename string) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
 	c_outpath := C.CString(filename)
 	defer C.free(unsafe.Pointer(c_outpath))
 	write_info := C.AcquireImageInfo()
-	C.SetImageInfoFilename(im.Info, c_outpath)
-	success := C.WriteImages(write_info, im.Image, c_outpath, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return ErrorFromExceptionInfo(im.Exception)
+	defer C.DestroyImageInfo(write_info)
+	C.SetImageInfoFilename(write_info, c_outpath)
+	success := C.WriteImages(write_info, im.Image, c_outpath, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
 	}
 	if success != C.MagickTrue {
 		return &MagickError{"fatal", "", "could not write to " + filename + " for unknown reason"}
