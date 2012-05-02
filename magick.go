@@ -182,6 +182,13 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	return &MagickImage{image, exception, info}, nil
 }
 
+func (im *MagickImage) Destroy() (err error) {
+	C.DestroyImageInfo(im.Info)
+	C.DestroyExceptionInfo(im.Exception)
+	C.DestroyImage(im.Image)
+	return
+}
+
 func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
