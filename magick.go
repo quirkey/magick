@@ -1,3 +1,11 @@
+// Package magick implements image manipulation routines based on the 
+// ImageMagick MagickCore C library
+//
+// magick's goal is to provide quick processing of images in ways most
+// commonly used by photo and other image based applications. It is not
+// the intention to implement the very large number of methods that 
+// MagickCore has to offer, rather just the most common needs for 
+// basic applications
 package magick
 
 /*
@@ -69,11 +77,13 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
 
-MagickBooleanType SetBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) {
+MagickBooleanType SetBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) 
+{
     return QueryColorDatabase(colorname, &image->background_color, exception);
 }
 
-Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) {
+Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
+{
     Image *new_image;
     new_image = CloneImage(image, 0, 0, MagickTrue, exception);
     if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
@@ -88,7 +98,8 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
 
 Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
   const double sigma,const ssize_t x_offset,const ssize_t y_offset,
-  ExceptionInfo *exception) {
+  ExceptionInfo *exception)
+{
 
   Image *new_image;
   Image *shadow_image;
