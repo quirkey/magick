@@ -192,6 +192,9 @@ func (im *MagickImage) Destroy() (err error) {
 	return
 }
 
+func (im *MagickImage) Width() (int) {
+        return (int)(im.Image.columns)
+}
 func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
@@ -211,14 +214,20 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 	return &MagickGeometry{int(rectangle.width), int(rectangle.height), int(rectangle.x), int(rectangle.y)}, nil
 }
 
-func (im *MagickImage) Thumbnail(width, height int) (resized *MagickImage, err error) {
-	c_cols := (C.size_t)(width)
-	c_rows := (C.size_t)(height)
-	new_image := C.ThumbnailImage(im.Image, c_cols, c_rows, im.Exception)
-	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
-		return nil, ErrorFromExceptionInfo(im.Exception)
+func (im *MagickImage) Resize(geometry string) (err error) {
+	rect, err := im.ParseGeometryToRectangleInfo(geometry)
+	if err != nil {
+		return err
 	}
-	return &MagickImage{new_image, im.Exception, C.AcquireImageInfo()}, nil
+	new_image := C.ThumbnailImage(im.Image, rect.width, rect.height, im.Exception)
+	if failed := C.CheckException(im.Exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(im.Exception)
+	}
+        im.Destroy()
+        im.Image = new_image
+        im.Info = C.AcquireImageInfo()
+        im.Exception = C.AcquireExceptionInfo()
+	return nil
 }
 
 func (im *MagickImage) Crop(geometry string) (cropped *MagickImage, err error) {

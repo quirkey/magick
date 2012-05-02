@@ -46,3 +46,10 @@ func TestDestroy(t *testing.T) {
 	assert.T(t, image.Destroy() == nil)
 	assert.T(t, image.Image == nil)
 }
+
+func TestResize(t *testing.T) {
+        image := setupImage(t)
+        err := image.Resize("100x100>")
+        assert.T(t, err == nil)
+        assert.Equal(t, 100, image.Width())
+}
