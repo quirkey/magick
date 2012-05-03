@@ -1,4 +1,5 @@
 magick
 _obj
 test/*_out.*
+test/test_*
 .DS_Store

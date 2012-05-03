@@ -3,6 +3,7 @@ package magick
 import (
 	"github.com/bmizerany/assert"
 	"io/ioutil"
+        "log"
 	"os"
 	"testing"
 )
@@ -97,6 +98,7 @@ func TestToFile(t *testing.T) {
 	image := setupImage(t)
 	filename := "test/test_out.png"
 	err := os.Remove(filename)
+	assert.T(t, err == nil)
 	err = image.ToFile(filename)
 	assert.T(t, err == nil)
 	file, err := os.Open(filename)
@@ -105,4 +107,68 @@ func TestToFile(t *testing.T) {
 	stat, err := file.Stat()
 	assert.T(t, stat != nil)
 	assert.Equal(t, (int64)(477575), stat.Size())
+}
+
+func TestFullStack(t *testing.T) {
+	var err error
+	var filename string
+	var image *MagickImage
+	// resize
+	image = setupImage(t)
+	err = image.Resize("100x100")
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_resize.png"
+                log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// crop
+	image = setupImage(t)
+	err = image.Crop("100x100+10+10")
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_crop.png"
+                log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// shadow
+	image = setupImage(t)
+	err = image.Shadow("#000", 90, 10, 0, 0)
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_shadow.png"
+                log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// fill
+	image = setupImage(t)
+	err = image.FillBackgroundColor("red")
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_fill.png"
+                log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// combination
+	image = setupImage(t)
+	err = image.Resize("100x100>")
+	assert.T(t, err == nil)
+	err = image.Shadow("#000", 90, 10, 0, 0)
+	assert.T(t, err == nil)
+	err = image.FillBackgroundColor("#CCC")
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_combo.jpg"
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
 }
