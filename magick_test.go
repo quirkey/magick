@@ -3,7 +3,7 @@ package magick
 import (
 	"github.com/bmizerany/assert"
 	"io/ioutil"
-        "log"
+	"log"
 	"os"
 	"testing"
 )
@@ -119,7 +119,7 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_resize.png"
-                log.Print(filename)
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -130,7 +130,7 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_crop.png"
-                log.Print(filename)
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -141,7 +141,7 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_shadow.png"
-                log.Print(filename)
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -152,7 +152,7 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_fill.png"
-                log.Print(filename)
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
