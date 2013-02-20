@@ -19,8 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 	log.Print("Transforming")
-	var new_image *magick.MagickImage
-	new_image, err = image.Thumbnail(100, 100)
+	err = image.Crop("100x100")
 	if err != nil {
 		log.Print("Problem with transforming")
 		os.Exit(1)
@@ -30,13 +29,13 @@ func main() {
 		log.Print("Problem with transforming")
 		os.Exit(1)
 	}
-	new_image, err = new_image.FillBackgroundColor("#333")
+	err = image.FillBackgroundColor("#333")
 	if err != nil {
 		log.Print("Problem setting background")
 		os.Exit(1)
 	}
 	log.Printf("Writing to %s", output)
-	err = new_image.ToFile(output)
+	err = image.ToFile(output)
 	if err != nil {
 		log.Printf("Error outputing file: %s", err.Error())
 		os.Exit(1)
