@@ -188,8 +188,12 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	if success != C.MagickTrue {
 		return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs"}
 	}
-	length := (C.size_t)(len(blob))
-	image := C.ReadImageFromBlob(info, unsafe.Pointer(&blob[0]), length)
+        blob_copy := make([]byte, len(blob))
+        copy(blob_copy, blob)
+	length := (C.size_t)(len(blob_copy))
+        blob_start := unsafe.Pointer(&blob_copy[0])
+        log.Printf("New blob at %d length %d", blob_start, length)
+	image := C.ReadImageFromBlob(info, blob_start, length)
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
