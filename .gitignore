@@ -3,3 +3,4 @@ _obj
 test/*_out.*
 test/test_*
 .DS_Store
+examples/examples
