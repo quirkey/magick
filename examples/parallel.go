@@ -5,7 +5,7 @@ import (
 	"os"
 	"io/ioutil"
         "fmt"
-	"quirkey/magick"
+	"github.com/quirkey/magick"
 	"time"
 )
 
