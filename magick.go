@@ -16,12 +16,12 @@ package magick
 #include <assert.h>
 #include <magick/MagickCore.h>
 
-void SetImageInfoFilename(ImageInfo *image_info, char *filename) 
+void SetImageInfoFilename(ImageInfo *image_info, char *filename)
 {
   (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
 }
 
-MagickBooleanType GetBlobSupport(ImageInfo *image_info) 
+MagickBooleanType GetBlobSupport(ImageInfo *image_info)
 {
   ExceptionInfo *exception;
   const MagickInfo *magick_info;
@@ -33,7 +33,7 @@ MagickBooleanType GetBlobSupport(ImageInfo *image_info)
   return GetMagickBlobSupport(magick_info);
 }
 
-Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length) 
+Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
 {
   Image *image;
   ExceptionInfo *exception;
@@ -92,7 +92,7 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     if (SetImageBackgroundColor(new_image) == MagickFalse) {
       return MagickFalse;
     }
-    AppendImageToList(&new_image, image);    
+    AppendImageToList(&new_image, image);
     return MergeImageLayers(new_image, MergeLayer, exception);
 }
 
@@ -108,7 +108,7 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
     return MagickFalse;
   }
   shadow_image = ShadowImage(new_image, opacity, sigma, x_offset, y_offset, exception);
-  AppendImageToList(&shadow_image, image);    
+  AppendImageToList(&shadow_image, image);
   if (SetBackgroundColor(shadow_image, "none", exception) == MagickFalse) {
     return MagickFalse;
   }

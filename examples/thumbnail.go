@@ -3,11 +3,15 @@ package main
 import (
 	"log"
 	"os"
-	"quirkey/magick"
+	"github.com/quirkey/magick"
 	"time"
 )
 
 func main() {
+	if len(os.Args) != 3 {
+		log.Print("Please supply an input and output filename e.g. ./examples foo.jpg bar.jpg")
+		os.Exit(1)
+	}
 	start := time.Now()
 	input := os.Args[1]
 	log.Printf("Reading from file %s", input)
@@ -24,7 +28,7 @@ func main() {
 		log.Print("Problem with transforming")
 		os.Exit(1)
 	}
-	// new_image, err = new_image.Shadow("#000", 75, 5, 2, 2)
+	err = new_image.Shadow("#000", 75, 5, 2, 2)
 	if err != nil {
 		log.Print("Problem with transforming")
 		os.Exit(1)

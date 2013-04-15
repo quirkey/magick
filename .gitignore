@@ -4,3 +4,4 @@ test/*_out.*
 test/test_*
 tmp/*
 .DS_Store
+examples/examples
