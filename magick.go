@@ -118,7 +118,6 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
 */
 import "C"
 import (
-	"log"
 	"os"
 	"strings"
 	"unsafe"
@@ -127,10 +126,9 @@ import (
 func init() {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	c_wd := C.CString(wd)
-	log.Printf("Working dir %s", wd)
 	C.MagickCoreGenesis(c_wd, C.MagickFalse)
 	defer C.free(unsafe.Pointer(c_wd))
 }
@@ -193,7 +191,6 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	copy(blob_copy, blob)
 	length := (C.size_t)(len(blob_copy))
 	blob_start := unsafe.Pointer(&blob_copy[0])
-	log.Printf("New blob at %d length %d", blob_start, length)
 	image := C.ReadImageFromBlob(info, blob_start, length)
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
