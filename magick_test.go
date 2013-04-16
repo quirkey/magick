@@ -109,6 +109,21 @@ func TestToFile(t *testing.T) {
 	assert.Equal(t, (int64)(437198), stat.Size())
 }
 
+func TestType(t *testing.T) {
+	image := setupImage(t)
+	assert.Equal(t, "PNG", image.Type())
+}
+
+func TestWidth(t *testing.T) {
+	image := setupImage(t)
+	assert.Equal(t, 600, image.Width())
+}
+
+func TestHeight(t *testing.T) {
+	image := setupImage(t)
+	assert.Equal(t, 552, image.Height())
+}
+
 func TestFullStack(t *testing.T) {
 	var err error
 	var filename string

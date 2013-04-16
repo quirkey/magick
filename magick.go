@@ -120,6 +120,7 @@ import "C"
 import (
 	"log"
 	"os"
+	"strings"
 	"unsafe"
 )
 
@@ -331,4 +332,8 @@ func (im *MagickImage) ToFile(filename string) (err error) {
 		return &MagickError{"fatal", "", "could not write to " + filename + " for unknown reason"}
 	}
 	return nil
+}
+
+func (im *MagickImage) Type() (t string) {
+	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
 }
