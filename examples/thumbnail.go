@@ -28,7 +28,7 @@ func main() {
 		log.Print("Problem with transforming")
 		os.Exit(1)
 	}
-	err = new_image.Shadow("#000", 75, 5, 2, 2)
+	err = image.Shadow("#000", 75, 5, 2, 2)
 	if err != nil {
 		log.Print("Problem with transforming")
 		os.Exit(1)

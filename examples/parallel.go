@@ -4,33 +4,34 @@ import (
 	"log"
 	"os"
 	"io/ioutil"
-        "fmt"
+	"fmt"
 	"github.com/quirkey/magick"
 	"time"
 )
 
 func main() {
-//	start := time.Now()
+	//	start := time.Now()
 	input := os.Args[1]
 	log.Printf("Reading from file %s", input)
 	// times := os.Args[2]
-        times := 100
+	times := 10
 	source, _ := ioutil.ReadFile(input)
-        files := make(chan string)
-        for i := 0; i < times; i++ {
-          go MakeThumbnail(source, i, files)
-        }
-        for {
-          <-files
-        }
+	files := make(chan string)
+
+	for i := 0; i < times; i++ {
+		go MakeThumbnail(source, i, files)
+	}
+	for {
+		<-files
+	}
 }
 
 func MakeThumbnail(source []byte, num int, c chan string) {
 	start := time.Now()
-        output := fmt.Sprintf("tmp/out_%d.png", num)
-        log.Printf("Working with %s", output)
+	output := fmt.Sprintf("tmp/out_%d.png", num)
+	log.Printf("Working with %s", output)
 	image, err := magick.NewFromBlob(source, "png")
-        defer image.Destroy()
+	defer image.Destroy()
 	if err != nil {
 		log.Printf("Error reading from file %s", err.Error())
 		os.Exit(1)
@@ -57,5 +58,5 @@ func MakeThumbnail(source []byte, num int, c chan string) {
 	}
 	end := time.Now()
 	log.Printf("done with %s. took %v", output, end.Sub(start))
-        c <- output
+	c <- output
 }
