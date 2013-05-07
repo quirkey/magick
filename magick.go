@@ -75,25 +75,6 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
 
-MagickBooleanType SetBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) 
-{
-    return QueryColorDatabase(colorname, &image->background_color, exception);
-}
-
-Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
-{
-    Image *new_image;
-    new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-    if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
-      return MagickFalse;
-    }
-    if (SetImageBackgroundColor(new_image) == MagickFalse) {
-      return MagickFalse;
-    }
-    AppendImageToList(&new_image, image);
-    return MergeImageLayers(new_image, MergeLayer, exception);
-}
-
 Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
   const double sigma,const ssize_t x_offset,const ssize_t y_offset,
   ExceptionInfo *exception)
@@ -102,15 +83,31 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
   Image *new_image;
   Image *shadow_image;
   new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-  if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
+  if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
     return MagickFalse;
   }
   shadow_image = ShadowImage(new_image, opacity, sigma, x_offset, y_offset, exception);
   AppendImageToList(&shadow_image, image);
-  if (SetBackgroundColor(shadow_image, "none", exception) == MagickFalse) {
+  if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
     return MagickFalse;
   }
   return MergeImageLayers(shadow_image, MergeLayer, exception);
+}
+
+Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
+{
+    Image *new_image;
+    new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+    if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
+      return MagickFalse;
+    }
+    if (SetImageBackgroundColor(image) == MagickFalse) {
+      return MagickFalse;
+    }
+    AppendImageToList(&image, new_image);
+    image = MergeImageLayers(image, MergeLayer, exception);
+    DestroyImage(new_image);
+    return image;
 }
 
 */
