@@ -80,18 +80,18 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
   ExceptionInfo *exception)
 {
 
-  Image *new_image;
   Image *shadow_image;
-  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
   if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
     return MagickFalse;
   }
-  shadow_image = ShadowImage(new_image, opacity, sigma, x_offset, y_offset, exception);
+  shadow_image = ShadowImage(image, opacity, sigma, x_offset, y_offset, exception);
   AppendImageToList(&shadow_image, image);
-  if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
+  if (QueryColorDatabase("none", &shadow_image->background_color, exception) == MagickFalse) {
     return MagickFalse;
   }
-  return MergeImageLayers(shadow_image, MergeLayer, exception);
+  image = MergeImageLayers(shadow_image, MergeLayer, exception);
+  DestroyImage(shadow_image);
+  return image;
 }
 
 Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
@@ -113,8 +113,8 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
 */
 import "C"
 import (
-	"os"
 	"log"
+	"os"
 	"strings"
 	"unsafe"
 )

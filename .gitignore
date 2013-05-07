@@ -4,4 +4,7 @@ test/*_out.*
 test/test_*
 tmp/*
 .DS_Store
-examples/examples
+examples/thumbnail
+examples/parallel
+examples/*.png
+examples/*.jpg

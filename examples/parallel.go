@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
-	"os"
-	"io/ioutil"
 	"fmt"
 	"github.com/quirkey/magick"
+	"io/ioutil"
+	"log"
+	"os"
 	"time"
 )
 

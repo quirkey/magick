@@ -18,7 +18,7 @@ func main() {
 	output := os.Args[2]
 	log.Printf("Reading from file %s, writing to file %s", input, output)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		start := time.Now()
 
 		image, err := magick.NewFromFile(input)
@@ -27,21 +27,20 @@ func main() {
 			os.Exit(1)
 		}
 
-			log.Print("Transforming")
-			err = image.Crop("400x200")
-			if err != nil {
-				log.Print("Problem with transforming")
-				os.Exit(1)
-			}
+		log.Print("Transforming")
+		err = image.Resize("400x200")
+		if err != nil {
+			log.Print("Problem with transforming")
+			os.Exit(1)
+		}
 
+		err = image.Shadow("#F00", 255, 5, 2, 2)
+		if err != nil {
+			log.Print("Problem with transforming")
+			os.Exit(1)
+		}
 
-				err = image.Shadow("#000", 75, 5, 2, 2)
-				if err != nil {
-					log.Print("Problem with transforming")
-					os.Exit(1)
-				}
-
-		err = image.FillBackgroundColor("#F00")
+		err = image.FillBackgroundColor("#00F")
 		if err != nil {
 			log.Print("Problem setting background")
 			os.Exit(1)
