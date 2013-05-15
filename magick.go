@@ -306,6 +306,7 @@ func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
 	char_pointer := unsafe.Pointer(outblob)
+	defer C.free(char_pointer)
 	return C.GoBytes(char_pointer, (C.int)(outlength)), nil
 }
 
