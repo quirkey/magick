@@ -85,6 +85,12 @@ func TestFillBackgroundColor(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+func TestAddText(t *testing.T) {
+	image := setupImage(t)
+	err := image.AddText("Some text", "test/futura_bold.ttf")
+	assert.T(t, err == nil)
+}
+
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")

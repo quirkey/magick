@@ -9,12 +9,13 @@
 package magick
 
 /*
-#cgo pkg-config: MagickCore
+#cgo pkg-config: MagickCore freetype2
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <magick/MagickCore.h>
+#include <ft2build.h>
 
 void SetImageInfoFilename(ImageInfo *image_info, char *filename)
 {
@@ -108,6 +109,17 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     image = MergeImageLayers(image, MergeLayer, exception);
     DestroyImage(new_image);
     return image;
+}
+MagickBooleanType AddText(Image *image, char *text, char *font) 
+{
+    DrawInfo *draw_info;
+    MagickBooleanType result;
+    draw_info = AcquireDrawInfo();
+    (void) CloneString(&draw_info->text, text);
+    (void) CloneString(&draw_info->font, font);
+    result = AnnotateImage(image, draw_info);
+    DestroyDrawInfo(draw_info);
+    return result;
 }
 
 */
@@ -289,6 +301,19 @@ func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	im.Destroy()
 	im.Image = new_image
 	return nil
+}
+
+func (im *MagickImage) AddText(text string, font_path string) (err error) {
+	c_text := C.CString(text)
+	defer C.free(unsafe.Pointer(c_text))
+	c_font_path := C.CString(font_path)
+	defer C.free(unsafe.Pointer(c_font_path))
+        result := C.AddText(im.Image, c_text, c_font_path);
+        if result == C.MagickTrue {
+          return nil
+        } else {
+          return 
+        }
 }
 
 func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
