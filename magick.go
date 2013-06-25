@@ -38,8 +38,6 @@ Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
   Image *image;
   ExceptionInfo *exception;
   exception = AcquireExceptionInfo();
-  *image_info->filename='\0';
-  *image_info->magick='\0';
   image_info->blob = blob;
   image_info->length = length;
   image = ReadImage(image_info, exception);
@@ -77,42 +75,39 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
 
-MagickBooleanType SetBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception) 
+Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
+  const double sigma,const ssize_t x_offset,const ssize_t y_offset,
+  ExceptionInfo *exception)
 {
-    return QueryColorDatabase(colorname, &image->background_color, exception);
+
+  Image *shadow_image;
+  if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
+    return MagickFalse;
+  }
+  shadow_image = ShadowImage(image, opacity, sigma, x_offset, y_offset, exception);
+  AppendImageToList(&shadow_image, image);
+  if (QueryColorDatabase("none", &shadow_image->background_color, exception) == MagickFalse) {
+    return MagickFalse;
+  }
+  image = MergeImageLayers(shadow_image, MergeLayer, exception);
+  DestroyImage(shadow_image);
+  return image;
 }
 
 Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
 {
     Image *new_image;
     new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-    if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
+    if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
       return MagickFalse;
     }
-    if (SetImageBackgroundColor(new_image) == MagickFalse) {
+    if (SetImageBackgroundColor(image) == MagickFalse) {
       return MagickFalse;
     }
-    AppendImageToList(&new_image, image);
-    return MergeImageLayers(new_image, MergeLayer, exception);
-}
-
-Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
-  const double sigma,const ssize_t x_offset,const ssize_t y_offset,
-  ExceptionInfo *exception)
-{
-
-  Image *new_image;
-  Image *shadow_image;
-  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-  if (SetBackgroundColor(new_image, colorname, exception) == MagickFalse) {
-    return MagickFalse;
-  }
-  shadow_image = ShadowImage(new_image, opacity, sigma, x_offset, y_offset, exception);
-  AppendImageToList(&shadow_image, image);
-  if (SetBackgroundColor(shadow_image, "none", exception) == MagickFalse) {
-    return MagickFalse;
-  }
-  return MergeImageLayers(shadow_image, MergeLayer, exception);
+    AppendImageToList(&image, new_image);
+    image = MergeImageLayers(image, MergeLayer, exception);
+    DestroyImage(new_image);
+    return image;
 }
 
 */
@@ -310,6 +305,7 @@ func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
 	char_pointer := unsafe.Pointer(outblob)
+	defer C.free(char_pointer)
 	return C.GoBytes(char_pointer, (C.int)(outlength)), nil
 }
 
