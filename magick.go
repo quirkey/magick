@@ -110,14 +110,17 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     DestroyImage(new_image);
     return image;
 }
-MagickBooleanType AddText(Image *image, char *text, char *font, char *color)
+MagickBooleanType AddText(Image *image, char *text, char *font, char *colorname, char *geometry)
 {
     DrawInfo *draw_info;
     MagickBooleanType result;
     draw_info = AcquireDrawInfo();
     (void) CloneString(&draw_info->text, text);
     (void) CloneString(&draw_info->font, font);
-    (void) CloneString(&draw_info->fill, color);
+    (void) CloneString(&draw_info->geometry, geometry);
+    if (QueryColorDatabase(colorname, &draw_info->fill, &image->exception) == MagickFalse) {
+      return MagickFalse;
+    }
     result = AnnotateImage(image, draw_info);
     DestroyDrawInfo(draw_info);
     return result;
@@ -304,14 +307,16 @@ func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	return nil
 }
 
-func (im *MagickImage) AddText(text string, font_path string, color string) (err error) {
+func (im *MagickImage) AddText(text string, font_path string, color string, geometry string) (err error) {
 	c_text := C.CString(text)
 	defer C.free(unsafe.Pointer(c_text))
 	c_font_path := C.CString(font_path)
 	defer C.free(unsafe.Pointer(c_font_path))
 	c_color := C.CString(color)
 	defer C.free(unsafe.Pointer(c_color))
-        C.AddText(im.Image, c_text, c_font_path, c_color)
+	c_geometry := C.CString(geometry)
+	defer C.free(unsafe.Pointer(c_geometry))
+        C.AddText(im.Image, c_text, c_font_path, c_color, c_geometry)
 	if failed := C.CheckException(&im.Image.exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(&im.Image.exception)
 	}
