@@ -87,7 +87,7 @@ func TestFillBackgroundColor(t *testing.T) {
 
 func TestAddText(t *testing.T) {
 	image := setupImage(t)
-	err := image.AddText("Some text", "test/futura_bold.ttf", "#000", "+10+10")
+	err := image.AddText("Some text", "test/futura_bold.ttf", "#000", "+10+10", 12)
 	assert.T(t, err == nil)
 }
 
@@ -180,7 +180,7 @@ func TestFullStack(t *testing.T) {
 	}
         //text
 	image = setupImage(t)
-	err = image.AddText("Some text", "test/futura_bold.ttf", "red", "200x200+50+50")
+	err = image.AddText("Some text", "test/futura_bold.ttf", "red", "200x200+50+50", 24)
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_text.png"
