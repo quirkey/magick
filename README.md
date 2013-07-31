@@ -4,10 +4,6 @@ magick implements image manipulation routines based on the
 ImageMagick MagickCore C library in Go. It is an opinionated high level 
 wrapper around the proven ImageMagick lib.
 
-## Dependencies
-
-magick depends on ImageMagick and specifically the [MagickCore](http://www.imagemagick.org/script/magick-core.php) C library. In most linux environments this is included in the ImageMagick-devel packages (e.g. `yum install ImageMagick-devel` or `sudo aptitude install ImageMagick-devel`).
-
 ## Why
 
 ### ImageMagick is magic
@@ -46,6 +42,8 @@ err = image.FillBackgroundColor("#00F")
 a_new_byteslice, err = image.ToBlog("jpg")
 ```
 
+For full API see the [API docs]()
+
 ## Gotchas/Known Issues
 
 magick has been thorougly tested and is memory-leak free as long as you always `Destroy()` MagickImage's after you no longer need them.
@@ -56,6 +54,10 @@ Internally, MagickCore can be used concurrently without issues, though weve obse
 
 - Text rendering
 - compositing two images
+
+## Dependencies
+
+magick depends on ImageMagick and specifically the [MagickCore](http://www.imagemagick.org/script/magick-core.php) C library. In most linux environments this is included in the ImageMagick-devel packages (e.g. `yum install ImageMagick-devel` or `sudo aptitude install ImageMagick-devel`).
 
 ## More
 
