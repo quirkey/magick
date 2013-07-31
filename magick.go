@@ -1,5 +1,6 @@
 // Package magick implements image manipulation routines based on the 
-// ImageMagick MagickCore C library
+// ImageMagick MagickCore C library. It is an opinionated high level 
+// wrapper around the proven ImageMagick lib.
 //
 // magick's goal is to provide quick processing of images in ways most
 // commonly used by photo and other image based applications. It is not
