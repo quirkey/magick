@@ -62,7 +62,7 @@ magick depends on ImageMagick and specifically the [MagickCore](http://www.image
 ## More
 
 * [API Docs]
-* [Examples]("examples/")
+* [Examples](examples/)
 
 ## Who
 
