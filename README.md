@@ -42,7 +42,7 @@ err = image.FillBackgroundColor("#00F")
 a_new_byteslice, err = image.ToBlog("jpg")
 ```
 
-For full API see the [API docs]()
+For full API see the [API docs](http://godoc.org/github.com/quirkey/magick)
 
 ## Gotchas/Known Issues
 
@@ -61,7 +61,7 @@ magick depends on ImageMagick and specifically the [MagickCore](http://www.image
 
 ## More
 
-* [API Docs]
+* [API Docs](http://godoc.org/github.com/quirkey/magick)
 * [Examples](examples/)
 
 ## Who
