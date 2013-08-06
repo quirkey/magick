@@ -124,6 +124,14 @@ func TestHeight(t *testing.T) {
 	assert.Equal(t, 552, image.Height())
 }
 
+func TestSetProperty(t *testing.T) {
+	image := setupImage(t)
+	ok := image.SetProperty("sampling-factor", "4:4:4")
+	assert.T(t, ok)
+	factor := image.GetProperty("sampling-factor")
+	assert.Equal(t, "4:4:4", factor)
+}
+
 func TestFullStack(t *testing.T) {
 	var err error
 	var filename string

@@ -1,11 +1,11 @@
-// Package magick implements image manipulation routines based on the 
-// ImageMagick MagickCore C library. It is an opinionated high level 
+// Package magick implements image manipulation routines based on the
+// ImageMagick MagickCore C library. It is an opinionated high level
 // wrapper around the proven ImageMagick lib.
 //
 // magick's goal is to provide quick processing of images in ways most
 // commonly used by photo and other image based applications. It is not
-// the intention to implement the very large number of methods that 
-// MagickCore has to offer, rather just the most common needs for 
+// the intention to implement the very large number of methods that
+// MagickCore has to offer, rather just the most common needs for
 // basic applications. It requires ImageMagick-devel libraries to
 // be available in order to compile.
 package magick
@@ -130,7 +130,7 @@ func init() {
 	defer C.free(unsafe.Pointer(c_wd))
 }
 
-// A wrapper around an IM Image 
+// A wrapper around an IM Image
 type MagickImage struct {
 	Image (*C.Image)
 }
@@ -154,7 +154,7 @@ func ErrorFromExceptionInfo(exception *C.ExceptionInfo) (err error) {
 	return &MagickError{string(exception.severity), C.GoString(exception.reason), C.GoString(exception.description)}
 }
 
-// NewFromFile loads a file at filename into a MagickImage. 
+// NewFromFile loads a file at filename into a MagickImage.
 // Exceptions are returned as MagickErrors.
 func NewFromFile(filename string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
@@ -171,7 +171,7 @@ func NewFromFile(filename string) (im *MagickImage, err error) {
 	return &MagickImage{image}, nil
 }
 
-// NewFromBlob takes a byte slice of image data and an extension that defines the 
+// NewFromBlob takes a byte slice of image data and an extension that defines the
 // image type (e.g. "png", "jpg", etc). It loads the image data and returns a MagickImage.
 // The extension is required so that Magick knows what processor to use.
 func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
@@ -224,9 +224,30 @@ func (im *MagickImage) Type() (t string) {
 	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
 }
 
+// GetProperty() retreives the given attribute or freeform property
+// string on the underlying Image
+func (im *MagickImage) GetProperty(prop string) (value string) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	c_value := C.GetImageProperty(im.Image, c_prop)
+        defer C.free(unsafe.Pointer(c_value))
+	return C.GoString(c_value)
+}
+
+// SetProperty() saves the given string value either to specific known
+// attribute or to a freeform property string on the underlying Image
+func (im *MagickImage) SetProperty(prop, value string) (ok bool) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	c_value := C.CString(value)
+	defer C.free(unsafe.Pointer(c_value))
+	success := C.SetImageProperty(im.Image, c_prop, c_value)
+	return success == C.MagickTrue
+}
+
 // ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick
 // RectangleInfo that contains the individual properties
-func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
+func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info C.RectangleInfo, err error) {
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
 	exception := C.AcquireExceptionInfo()
