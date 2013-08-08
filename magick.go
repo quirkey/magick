@@ -58,6 +58,7 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   assert(exception->signature == MagickSignature);
   if (exception->exceptions  == (void *) NULL)
     return MagickFalse;
+
   LockSemaphoreInfo(exception->semaphore);
   ResetLinkedListIterator((LinkedListInfo *) exception->exceptions);
   p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
@@ -197,6 +198,7 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
 	defer C.DestroyImageInfo(info)
+
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
@@ -214,9 +216,15 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	length := (C.size_t)(len(blob_copy))
 	blob_start := unsafe.Pointer(&blob_copy[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
+
+	if image == nil {
+		return nil, &MagickError{"fatal", "", "corrupt image, not a " + extension}
+	}
+
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
+
 	return &MagickImage{image}, nil
 }
 
