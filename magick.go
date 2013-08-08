@@ -134,7 +134,6 @@ Image *Negate(Image *image, ExceptionInfo *exception){
 */
 import "C"
 import (
-	"errors"
 	"os"
 	"strings"
 	"unsafe"
@@ -219,7 +218,7 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	image := C.ReadImageFromBlob(info, blob_start, length)
 
 	if image == nil {
-		return nil, errors.New("CORRUPT IMAGE")
+		return nil, &MagickError{"fatal", "", "corrupt image, not a " + extension}
 	}
 
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
