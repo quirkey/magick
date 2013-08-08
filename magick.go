@@ -112,6 +112,15 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     return image;
 }
 
+Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
+  Image *new_image;
+  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+  if (SeparateImageChannel(new_image, 0x0008) == MagickFalse){
+    return MagickFalse;
+  }
+  return new_image;
+}
+
 */
 import "C"
 import (
@@ -230,7 +239,7 @@ func (im *MagickImage) GetProperty(prop string) (value string) {
 	c_prop := C.CString(prop)
 	defer C.free(unsafe.Pointer(c_prop))
 	c_value := C.GetImageProperty(im.Image, c_prop)
-        defer C.free(unsafe.Pointer(c_value))
+	defer C.free(unsafe.Pointer(c_value))
 	return C.GoString(c_value)
 }
 
@@ -332,6 +341,19 @@ func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	c_color := C.CString(color)
 	defer C.free(unsafe.Pointer(c_color))
 	new_image := C.FillBackgroundColor(im.Image, c_color, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+	im.Destroy()
+	im.Image = new_image
+	return nil
+}
+
+// SeparateAlphaChannel replaces the Image with grayscale data from the image's Alpha Channel values
+func (im *MagickImage) SeparateAlphaChannel() (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	new_image := C.SeparateAlphaChannel(im.Image, exception)
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(exception)
 	}

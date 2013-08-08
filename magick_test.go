@@ -85,6 +85,13 @@ func TestFillBackgroundColor(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+func TestSeparateAlphaChannel(t *testing.T) {
+	image := setupImage(t)
+	err := image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+	assert.T(t, image != nil)
+}
+
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
@@ -97,9 +104,8 @@ func TestToBlob(t *testing.T) {
 func TestToFile(t *testing.T) {
 	image := setupImage(t)
 	filename := "test/test_out.png"
-	err := os.Remove(filename)
-	assert.T(t, err == nil)
-	err = image.ToFile(filename)
+	os.Remove(filename)
+	err := image.ToFile(filename)
 	assert.T(t, err == nil)
 	file, err := os.Open(filename)
 	assert.T(t, err == nil)
@@ -190,6 +196,17 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_combo.jpg"
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// alpha mask
+	image = setupImage(t)
+	err = image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_alpha.jpg"
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
