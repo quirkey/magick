@@ -121,6 +121,15 @@ Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
   return new_image;
 }
 
+Image *Negate(Image *image, ExceptionInfo *exception){
+  Image *new_image;
+  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+  if (NegateImage(new_image, MagickTrue) == MagickFalse){
+    return MagickFalse;
+  }
+  return new_image;
+}
+
 */
 import "C"
 import (
@@ -354,6 +363,18 @@ func (im *MagickImage) SeparateAlphaChannel() (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	new_image := C.SeparateAlphaChannel(im.Image, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+	im.Destroy()
+	im.Image = new_image
+	return nil
+}
+
+func (im *MagickImage) Negate() (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	new_image := C.Negate(im.Image, exception)
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(exception)
 	}

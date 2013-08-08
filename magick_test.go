@@ -92,6 +92,13 @@ func TestSeparateAlphaChannel(t *testing.T) {
 	assert.T(t, image != nil)
 }
 
+func TestNegateImage(t *testing.T) {
+	image := setupImage(t)
+	err := image.Negate()
+	assert.T(t, err == nil)
+	assert.T(t, image != nil)
+}
+
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
@@ -206,6 +213,20 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_alpha.jpg"
+		log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// alpha mask + negate
+	image = setupImage(t)
+	err = image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+
+	err = image.Negate()
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_alpha_negative.jpg"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
