@@ -85,15 +85,12 @@ func TestFillBackgroundColor(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
-<<<<<<< HEAD
 func TestAddText(t *testing.T) {
 	image := setupImage(t)
 	err := image.AddText("Some text", "test/futura_bold.ttf", "#000", "+10+10", 12)
 	assert.T(t, err == nil)
 }
 
-||||||| merged common ancestors
-=======
 func TestSeparateAlphaChannel(t *testing.T) {
 	image := setupImage(t)
 	err := image.SeparateAlphaChannel()
@@ -108,7 +105,6 @@ func TestNegateImage(t *testing.T) {
 	assert.T(t, image != nil)
 }
 
->>>>>>> eeadefd42d70272f65f39a905c488cd728e205bf
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
@@ -203,7 +199,7 @@ func TestFullStack(t *testing.T) {
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
 	}
-        //text
+	//text
 	image = setupImage(t)
 	err = image.AddText("Some text", "test/futura_bold.ttf", "red", "200x200+50+50", 24)
 	assert.T(t, err == nil)

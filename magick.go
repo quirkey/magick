@@ -383,7 +383,6 @@ func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	return nil
 }
 
-<<<<<<< HEAD
 func (im *MagickImage) AddText(text string, font_path string, color string, geometry string, pointsize float32) (err error) {
 	c_text := C.CString(text)
 	defer C.free(unsafe.Pointer(c_text))
@@ -393,17 +392,13 @@ func (im *MagickImage) AddText(text string, font_path string, color string, geom
 	defer C.free(unsafe.Pointer(c_color))
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
-        C.AddText(im.Image, c_text, c_font_path, c_color, c_geometry, (C.double)(pointsize))
+	C.AddText(im.Image, c_text, c_font_path, c_color, c_geometry, (C.double)(pointsize))
 	if failed := C.CheckException(&im.Image.exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(&im.Image.exception)
 	}
-        return nil
+	return nil
 }
 
-func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
-||||||| merged common ancestors
-func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
-=======
 // SeparateAlphaChannel replaces the Image with grayscale data from the image's Alpha Channel values
 func (im *MagickImage) SeparateAlphaChannel() (err error) {
 	exception := C.AcquireExceptionInfo()
@@ -432,7 +427,6 @@ func (im *MagickImage) Negate() (err error) {
 // ToBlob takes a (transformed) MagickImage and returns a byte slice in the format you specify with extension.
 // Magick uses the extension to transform the image in to the proper encoding (e.g. "jpg", "png")
 func (im *MagickImage) ToBlob(extension string) (blob []byte, err error) {
->>>>>>> eeadefd42d70272f65f39a905c488cd728e205bf
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	image_info := C.AcquireImageInfo()
