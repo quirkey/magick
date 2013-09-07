@@ -85,12 +85,30 @@ func TestFillBackgroundColor(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+<<<<<<< HEAD
 func TestAddText(t *testing.T) {
 	image := setupImage(t)
 	err := image.AddText("Some text", "test/futura_bold.ttf", "#000", "+10+10", 12)
 	assert.T(t, err == nil)
 }
 
+||||||| merged common ancestors
+=======
+func TestSeparateAlphaChannel(t *testing.T) {
+	image := setupImage(t)
+	err := image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+	assert.T(t, image != nil)
+}
+
+func TestNegateImage(t *testing.T) {
+	image := setupImage(t)
+	err := image.Negate()
+	assert.T(t, err == nil)
+	assert.T(t, image != nil)
+}
+
+>>>>>>> eeadefd42d70272f65f39a905c488cd728e205bf
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
@@ -103,9 +121,8 @@ func TestToBlob(t *testing.T) {
 func TestToFile(t *testing.T) {
 	image := setupImage(t)
 	filename := "test/test_out.png"
-	err := os.Remove(filename)
-	assert.T(t, err == nil)
-	err = image.ToFile(filename)
+	os.Remove(filename)
+	err := image.ToFile(filename)
 	assert.T(t, err == nil)
 	file, err := os.Open(filename)
 	assert.T(t, err == nil)
@@ -128,6 +145,14 @@ func TestWidth(t *testing.T) {
 func TestHeight(t *testing.T) {
 	image := setupImage(t)
 	assert.Equal(t, 552, image.Height())
+}
+
+func TestSetProperty(t *testing.T) {
+	image := setupImage(t)
+	ok := image.SetProperty("sampling-factor", "4:4:4")
+	assert.T(t, ok)
+	factor := image.GetProperty("sampling-factor")
+	assert.Equal(t, "4:4:4", factor)
 }
 
 func TestFullStack(t *testing.T) {
@@ -199,6 +224,31 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_combo.jpg"
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// alpha mask
+	image = setupImage(t)
+	err = image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_alpha.jpg"
+		log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
+	// alpha mask + negate
+	image = setupImage(t)
+	err = image.SeparateAlphaChannel()
+	assert.T(t, err == nil)
+
+	err = image.Negate()
+	assert.T(t, err == nil)
+	if err == nil {
+		filename = "test/test_alpha_negative.jpg"
+		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)

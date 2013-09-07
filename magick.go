@@ -1,11 +1,13 @@
-// Package magick implements image manipulation routines based on the 
-// ImageMagick MagickCore C library
+// Package magick implements image manipulation routines based on the
+// ImageMagick MagickCore C library. It is an opinionated high level
+// wrapper around the proven ImageMagick lib.
 //
 // magick's goal is to provide quick processing of images in ways most
 // commonly used by photo and other image based applications. It is not
-// the intention to implement the very large number of methods that 
-// MagickCore has to offer, rather just the most common needs for 
-// basic applications
+// the intention to implement the very large number of methods that
+// MagickCore has to offer, rather just the most common needs for
+// basic applications. It requires ImageMagick-devel libraries to
+// be available in order to compile.
 package magick
 
 /*
@@ -57,6 +59,7 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   assert(exception->signature == MagickSignature);
   if (exception->exceptions  == (void *) NULL)
     return MagickFalse;
+
   LockSemaphoreInfo(exception->semaphore);
   ResetLinkedListIterator((LinkedListInfo *) exception->exceptions);
   p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
@@ -127,6 +130,24 @@ MagickBooleanType AddText(Image *image, char *text, char *font, char *colorname,
     return result;
 }
 
+Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
+  Image *new_image;
+  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+  if (SeparateImageChannel(new_image, 0x0008) == MagickFalse){
+    return MagickFalse;
+  }
+  return new_image;
+}
+
+Image *Negate(Image *image, ExceptionInfo *exception){
+  Image *new_image;
+  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
+  if (NegateImage(new_image, MagickTrue) == MagickFalse){
+    return MagickFalse;
+  }
+  return new_image;
+}
+
 */
 import "C"
 import (
@@ -145,10 +166,12 @@ func init() {
 	defer C.free(unsafe.Pointer(c_wd))
 }
 
+// A wrapper around an IM Image
 type MagickImage struct {
 	Image (*C.Image)
 }
 
+// Geometry is usually defined as a string of WxH+X+Y
 type MagickGeometry struct {
 	Width, Height, Xoffset, Yoffset int
 }
@@ -167,6 +190,8 @@ func ErrorFromExceptionInfo(exception *C.ExceptionInfo) (err error) {
 	return &MagickError{string(exception.severity), C.GoString(exception.reason), C.GoString(exception.description)}
 }
 
+// NewFromFile loads a file at filename into a MagickImage.
+// Exceptions are returned as MagickErrors.
 func NewFromFile(filename string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -182,11 +207,15 @@ func NewFromFile(filename string) (im *MagickImage, err error) {
 	return &MagickImage{image}, nil
 }
 
+// NewFromBlob takes a byte slice of image data and an extension that defines the
+// image type (e.g. "png", "jpg", etc). It loads the image data and returns a MagickImage.
+// The extension is required so that Magick knows what processor to use.
 func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
 	defer C.DestroyImageInfo(info)
+
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
@@ -204,27 +233,64 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	length := (C.size_t)(len(blob_copy))
 	blob_start := unsafe.Pointer(&blob_copy[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
+
+	if image == nil {
+		return nil, &MagickError{"fatal", "", "corrupt image, not a " + extension}
+	}
+
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
+
 	return &MagickImage{image}, nil
 }
 
+// Destroy frees the C memory for the image. Should be called after processing is done.
 func (im *MagickImage) Destroy() (err error) {
 	C.DestroyImage(im.Image)
 	im.Image = nil
 	return
 }
 
+// Width returns the Width of the loaded image in pixels as an int
 func (im *MagickImage) Width() int {
 	return (int)(im.Image.columns)
 }
 
+// Height returns the Height of the loaded image in pixels as an int
 func (im *MagickImage) Height() int {
 	return (int)(im.Image.rows)
 }
 
-func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.RectangleInfo), err error) {
+// Type returns the underlying encoding or "magick" of the image as a string
+func (im *MagickImage) Type() (t string) {
+	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
+}
+
+// GetProperty() retreives the given attribute or freeform property
+// string on the underlying Image
+func (im *MagickImage) GetProperty(prop string) (value string) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	c_value := C.GetImageProperty(im.Image, c_prop)
+	defer C.free(unsafe.Pointer(c_value))
+	return C.GoString(c_value)
+}
+
+// SetProperty() saves the given string value either to specific known
+// attribute or to a freeform property string on the underlying Image
+func (im *MagickImage) SetProperty(prop, value string) (ok bool) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	c_value := C.CString(value)
+	defer C.free(unsafe.Pointer(c_value))
+	success := C.SetImageProperty(im.Image, c_prop, c_value)
+	return success == C.MagickTrue
+}
+
+// ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick
+// RectangleInfo that contains the individual properties
+func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info C.RectangleInfo, err error) {
 	c_geometry := C.CString(geometry)
 	defer C.free(unsafe.Pointer(c_geometry))
 	exception := C.AcquireExceptionInfo()
@@ -236,6 +302,7 @@ func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info (C.Re
 	return
 }
 
+// ParseGeometry uses ParseGeometryToRectangleInfo to convert from a geometry string into a MagickGeometry
 func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err error) {
 	rectangle, err := im.ParseGeometryToRectangleInfo(geometry)
 	if err != nil {
@@ -244,6 +311,8 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 	return &MagickGeometry{int(rectangle.width), int(rectangle.height), int(rectangle.x), int(rectangle.y)}, nil
 }
 
+// Resize resizes the image based on the geometry string passed and stores the resized image in place
+// For more info about Geometry see http://www.imagemagick.org/script/command-line-processing.php#geometry
 func (im *MagickImage) Resize(geometry string) (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -260,6 +329,8 @@ func (im *MagickImage) Resize(geometry string) (err error) {
 	return nil
 }
 
+// Crop crops the image based on the geometry string passed and stores the cropped image in place
+// For more info about Geometry see http://www.imagemagick.org/script/command-line-processing.php#geometry
 func (im *MagickImage) Crop(geometry string) (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -276,6 +347,8 @@ func (im *MagickImage) Crop(geometry string) (err error) {
 	return nil
 }
 
+// Shadow adds a dropshadow to the current (transparent) image and stores the shadowed image in place
+// For more information about shadow options see: http://www.imagemagick.org/Usage/blur/#shadow
 func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yoffset int) (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -294,6 +367,8 @@ func (im *MagickImage) Shadow(color string, opacity, sigma float32, xoffset, yof
 	return nil
 }
 
+// FillBackgroundColor fills transparent areas of an image with a solid color and stores the filled image in place.
+// color can be any color format that image magick understands, see: http://www.imagemagick.org/ImageMagick-7.0.0/script/color.php#models
 func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -308,6 +383,7 @@ func (im *MagickImage) FillBackgroundColor(color string) (err error) {
 	return nil
 }
 
+<<<<<<< HEAD
 func (im *MagickImage) AddText(text string, font_path string, color string, geometry string, pointsize float32) (err error) {
 	c_text := C.CString(text)
 	defer C.free(unsafe.Pointer(c_text))
@@ -325,11 +401,43 @@ func (im *MagickImage) AddText(text string, font_path string, color string, geom
 }
 
 func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
+||||||| merged common ancestors
+func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
+=======
+// SeparateAlphaChannel replaces the Image with grayscale data from the image's Alpha Channel values
+func (im *MagickImage) SeparateAlphaChannel() (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	new_image := C.SeparateAlphaChannel(im.Image, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+	im.Destroy()
+	im.Image = new_image
+	return nil
+}
+
+func (im *MagickImage) Negate() (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	new_image := C.Negate(im.Image, exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+	im.Destroy()
+	im.Image = new_image
+	return nil
+}
+
+// ToBlob takes a (transformed) MagickImage and returns a byte slice in the format you specify with extension.
+// Magick uses the extension to transform the image in to the proper encoding (e.g. "jpg", "png")
+func (im *MagickImage) ToBlob(extension string) (blob []byte, err error) {
+>>>>>>> eeadefd42d70272f65f39a905c488cd728e205bf
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	image_info := C.AcquireImageInfo()
 	defer C.DestroyImageInfo(image_info)
-	c_outpath := C.CString("image." + filetype)
+	c_outpath := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_outpath))
 	C.SetImageInfoFilename(image_info, c_outpath)
 	var outlength (C.size_t)
@@ -342,6 +450,8 @@ func (im *MagickImage) ToBlob(filetype string) (blob []byte, err error) {
 	return C.GoBytes(char_pointer, (C.int)(outlength)), nil
 }
 
+// ToFile writes the (transformed) MagickImage to the regular file at filename. Magick determines
+// the encoding of the output file by the extension given to the filename (e.g. "image.jpg", "image.png")
 func (im *MagickImage) ToFile(filename string) (err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
@@ -358,8 +468,4 @@ func (im *MagickImage) ToFile(filename string) (err error) {
 		return &MagickError{"fatal", "", "could not write to " + filename + " for unknown reason"}
 	}
 	return nil
-}
-
-func (im *MagickImage) Type() (t string) {
-	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
 }
