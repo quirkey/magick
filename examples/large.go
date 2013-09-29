@@ -30,6 +30,7 @@ func main() {
         log.Printf("size: %d %d", image.Width(), image.Height())
 	err = image.Resize("2000x2000!")
 	log.Printf("Transforming image took %v\n", time.Now().Sub(start))
+        _ = image.Progressive()
 	start = time.Now()
 	if err != nil {
 		log.Print("Problem with transforming")

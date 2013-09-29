@@ -251,6 +251,8 @@ func (im *MagickImage) Type() (t string) {
 	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
 }
 
+// ResizeRatio() returns the ratio that the size you want to resize to
+// defined by width/height is over the size of the underlying Image
 func (im *MagickImage) ResizeRatio(width, height int) float64 {
 	return math.Abs((float64)(width*height) / (float64)(im.Width()*im.Height()))
 }
@@ -297,6 +299,12 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 		return nil, err
 	}
 	return &MagickGeometry{int(rectangle.width), int(rectangle.height), int(rectangle.x), int(rectangle.y)}, nil
+}
+
+// Progessive() is a shortcut for making the underlying image a
+// Plane interlaced Progressive JPG
+func (im *MagickImage) Progressive() (ok bool) {
+        return im.SetProperty("interlace", "Plane")
 }
 
 // Resize resizes the image based on the geometry string passed and stores the resized image in place
