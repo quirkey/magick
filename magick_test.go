@@ -43,6 +43,13 @@ func TestParseGeometry(t *testing.T) {
 	assert.Equal(t, 100, geometry.Width)
 }
 
+func TestResizeRatio(t *testing.T) {
+	image := setupImage(t)
+	ratio := image.ResizeRatio(300, 300)
+	assert.T(t, ratio > 0.27)
+	assert.T(t, ratio < 0.28)
+}
+
 func TestDestroy(t *testing.T) {
 	image := setupImage(t)
 	assert.T(t, image.Destroy() == nil)

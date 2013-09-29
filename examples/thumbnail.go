@@ -8,8 +8,6 @@ import (
 )
 
 func main() {
-	exitChan := make(chan int, 1)
-
 	if len(os.Args) != 3 {
 		log.Print("Please supply an input and output filename e.g. ./examples foo.jpg bar.jpg")
 		os.Exit(1)
@@ -22,6 +20,7 @@ func main() {
 		start := time.Now()
 
 		image, err := magick.NewFromFile(input)
+		log.Printf("Loading image took %v\n", time.Now().Sub(start))
 		if err != nil {
 			log.Printf("Error reading from file %s", err.Error())
 			os.Exit(1)
@@ -55,8 +54,7 @@ func main() {
 		log.Printf("Wrote to %s %b", output)
 
 		end := time.Now()
-		log.Printf("Done. took %v\n", end.Sub(start))
+		log.Printf("Done. took %v\n", time.Now().Sub(start))
 		image.Destroy()
 	}
-	<-exitChan
 }

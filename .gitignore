@@ -4,6 +4,11 @@ test/*_out.*
 test/test_*
 tmp/*
 .DS_Store
+thumbnail
+parallel
+large
+*.jpg
+*.png
 examples/thumbnail
 examples/parallel
 examples/*.png

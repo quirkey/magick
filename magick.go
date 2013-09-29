@@ -134,6 +134,7 @@ Image *Negate(Image *image, ExceptionInfo *exception){
 */
 import "C"
 import (
+	"math"
 	"os"
 	"strings"
 	"unsafe"
@@ -250,6 +251,10 @@ func (im *MagickImage) Type() (t string) {
 	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
 }
 
+func (im *MagickImage) ResizeRatio(width, height int) float64 {
+	return math.Abs((float64)(width*height) / (float64)(im.Width()*im.Height()))
+}
+
 // GetProperty() retreives the given attribute or freeform property
 // string on the underlying Image
 func (im *MagickImage) GetProperty(prop string) (value string) {
@@ -303,7 +308,13 @@ func (im *MagickImage) Resize(geometry string) (err error) {
 	if err != nil {
 		return err
 	}
-	new_image := C.ThumbnailImage(im.Image, rect.width, rect.height, exception)
+	ratio := im.ResizeRatio(int(rect.width), int(rect.height))
+	var new_image *C.Image
+	if ratio > 0.4 {
+		new_image = C.AdaptiveResizeImage(im.Image, rect.width, rect.height, exception)
+	} else {
+		new_image = C.ThumbnailImage(im.Image, rect.width, rect.height, exception)
+	}
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
 		return ErrorFromExceptionInfo(exception)
 	}
