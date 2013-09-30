@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-	//	start := time.Now()
 	input := os.Args[1]
 	log.Printf("Reading from file %s", input)
 	// times := os.Args[2]
@@ -21,7 +20,7 @@ func main() {
 	for i := 0; i < times; i++ {
 		go MakeThumbnail(source, i, files)
 	}
-	for {
+	for i := 0; i < times; i++ {
 		<-files
 	}
 }
