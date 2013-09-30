@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/quirkey/magick"
+	"io/ioutil"
 	"log"
 	"os"
-        "io/ioutil"
 	"time"
 )
 
@@ -31,6 +31,7 @@ func main() {
 	image.Quality(50)
 	image.Strip()
 	image.Progressive()
+	image.SetProperty("jpeg:sampling-factor", "4:4:4")
 	log.Print("Transforming")
 	log.Printf("size: %d %d", image.Width(), image.Height())
 	err = image.Resize("2000x2000!")
