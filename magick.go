@@ -23,10 +23,6 @@ void SetImageInfoFilename(ImageInfo *image_info, char *filename)
   (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
 }
 
-void SetQuality(Image *image, int quality) {
-  image->quality = quality;
-}
-
 MagickBooleanType GetBlobSupport(ImageInfo *image_info)
 {
   ExceptionInfo *exception;
@@ -312,7 +308,7 @@ func (im *MagickImage) Progressive() (ok bool) {
 }
 
 func (im *MagickImage) Quality(quality int) {
-	C.SetQuality(im.Image, (C.int)(quality))
+	im.Image.quality = (C.size_t)(quality)
 }
 
 // Resize resizes the image based on the geometry string passed and stores the resized image in place

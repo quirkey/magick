@@ -26,11 +26,10 @@ func main() {
 		os.Exit(1)
 	}
 
-        image.Quality(40)
-        _ = image.Progressive()
+	image.Quality(100)
+	_ = image.Progressive()
 	log.Print("Transforming")
-        log.Printf("size: %d %d", image.Width(), image.Height())
-        _ = image.SetProperty("compress", "10")
+	log.Printf("size: %d %d", image.Width(), image.Height())
 	err = image.Resize("2000x2000!")
 	log.Printf("Transforming image took %v\n", time.Now().Sub(start))
 	start = time.Now()
