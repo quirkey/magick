@@ -4,6 +4,7 @@ import (
 	"github.com/quirkey/magick"
 	"log"
 	"os"
+        "io/ioutil"
 	"time"
 )
 
@@ -18,7 +19,8 @@ func main() {
 
 	start := time.Now()
 
-	image, err := magick.NewFromFile(input)
+	source, _ := ioutil.ReadFile(input)
+	image, err := magick.NewFromBlob(source, "jpg")
 	log.Printf("Loading image took %v\n", time.Now().Sub(start))
 	start = time.Now()
 	if err != nil {
@@ -27,7 +29,7 @@ func main() {
 	}
 
 	image.Quality(50)
-        image.Strip()
+	image.Strip()
 	log.Print("Transforming")
 	log.Printf("size: %d %d", image.Width(), image.Height())
 	err = image.Resize("2000x2000!")
