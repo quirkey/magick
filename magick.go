@@ -303,8 +303,8 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 
 // Progessive() is a shortcut for making the underlying image a
 // Plane interlaced Progressive JPG
-func (im *MagickImage) Progressive() (ok bool) {
-	return im.SetProperty("interlace", "Plane")
+func (im *MagickImage) Progressive() {
+	im.Image.interlace = C.PlaneInterlace
 }
 
 func (im *MagickImage) Quality(quality int) {
@@ -412,6 +412,14 @@ func (im *MagickImage) Negate() (err error) {
 	im.Destroy()
 	im.Image = new_image
 	return nil
+}
+
+func (im *MagickImage) Strip() (err error) {
+	ok := C.StripImage(im.Image)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not strip image"}
+	}
+	return
 }
 
 // ToBlob takes a (transformed) MagickImage and returns a byte slice in the format you specify with extension.

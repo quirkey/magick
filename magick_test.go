@@ -50,6 +50,12 @@ func TestResizeRatio(t *testing.T) {
 	assert.T(t, ratio < 0.28)
 }
 
+func TestStrip(t *testing.T) {
+	image := setupImage(t)
+	err := image.Strip()
+	assert.T(t, err == nil)
+}
+
 func TestDestroy(t *testing.T) {
 	image := setupImage(t)
 	assert.T(t, image.Destroy() == nil)
