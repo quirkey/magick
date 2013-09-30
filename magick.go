@@ -418,6 +418,7 @@ func (im *MagickImage) Negate() (err error) {
 	return nil
 }
 
+// Strip strips the image of its extra meta (exif) data
 func (im *MagickImage) Strip() (err error) {
 	ok := C.StripImage(im.Image)
 	if ok == C.MagickFalse {
