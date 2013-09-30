@@ -23,6 +23,10 @@ void SetImageInfoFilename(ImageInfo *image_info, char *filename)
   (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
 }
 
+void SetQuality(Image *image, int quality) {
+  image->quality = quality;
+}
+
 MagickBooleanType GetBlobSupport(ImageInfo *image_info)
 {
   ExceptionInfo *exception;
@@ -304,7 +308,11 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 // Progessive() is a shortcut for making the underlying image a
 // Plane interlaced Progressive JPG
 func (im *MagickImage) Progressive() (ok bool) {
-        return im.SetProperty("interlace", "Plane")
+	return im.SetProperty("interlace", "Plane")
+}
+
+func (im *MagickImage) Quality(quality int) {
+	C.SetQuality(im.Image, (C.int)(quality))
 }
 
 // Resize resizes the image based on the geometry string passed and stores the resized image in place
