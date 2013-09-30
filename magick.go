@@ -199,18 +199,18 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
+	defer C.DestroyImageInfo(info)
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
+	cloned_info := C.CloneImageInfo(info)
 	var success (C.MagickBooleanType)
 	success = C.SetImageInfo(info, 1, exception)
 	if success != C.MagickTrue {
-		C.DestroyImageInfo(info)
 		return nil, ErrorFromExceptionInfo(exception)
 	}
 	success = C.GetBlobSupport(info)
 	if success != C.MagickTrue {
-		C.DestroyImageInfo(info)
 		return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs"}
 	}
 	blob_copy := make([]byte, len(blob))
@@ -220,16 +220,14 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	image := C.ReadImageFromBlob(info, blob_start, length)
 
 	if image == nil {
-		C.DestroyImageInfo(info)
 		return nil, &MagickError{"fatal", "", "corrupt image, not a " + extension}
 	}
 
 	if failed := C.CheckException(exception); failed == C.MagickTrue {
-		C.DestroyImageInfo(info)
 		return nil, ErrorFromExceptionInfo(exception)
 	}
 
-	return &MagickImage{Image: image, ImageInfo: info}, nil
+	return &MagickImage{Image: image, ImageInfo: cloned_info}, nil
 }
 
 // Destroy frees the C memory for the image. Should be called after processing is done.
@@ -315,7 +313,7 @@ func (im *MagickImage) ParseGeometry(geometry string) (info *MagickGeometry, err
 // Progessive() is a shortcut for making the underlying image a
 // Plane interlaced Progressive JPG
 func (im *MagickImage) Progressive() {
-	im.Image.interlace = C.PlaneInterlace
+	im.ImageInfo.interlace = C.PlaneInterlace
 }
 
 func (im *MagickImage) Quality(quality int) {

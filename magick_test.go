@@ -13,6 +13,8 @@ func setupImage(t *testing.T) (image *MagickImage) {
 	image, error := NewFromFile(filename)
 	assert.T(t, error == nil)
 	assert.T(t, image != nil)
+	assert.T(t, image.Image != nil)
+	assert.T(t, image.ImageInfo != nil)
 	return
 }
 
@@ -21,6 +23,8 @@ func TestImageFromFile(t *testing.T) {
 	image, error := NewFromFile(filename)
 	assert.T(t, error == nil)
 	assert.T(t, image != nil)
+	assert.T(t, image.Image != nil)
+	assert.T(t, image.ImageInfo != nil)
 
 	bad_filename := "test/heart_whatwhat.png"
 	image, error = NewFromFile(bad_filename)
@@ -33,6 +37,8 @@ func TestImageFromBlob(t *testing.T) {
 	image, error := NewFromBlob(source, "png")
 	assert.T(t, error == nil)
 	assert.T(t, image != nil)
+	assert.T(t, image.Image != nil)
+	assert.T(t, image.ImageInfo != nil)
 }
 
 func TestParseGeometry(t *testing.T) {
@@ -56,10 +62,18 @@ func TestStrip(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+func TestProgressive(t *testing.T) {
+	image := setupImage(t)
+	image.Progressive()
+	_, err := image.ToBlob("jpg")
+	assert.T(t, err == nil)
+}
+
 func TestDestroy(t *testing.T) {
 	image := setupImage(t)
 	assert.T(t, image.Destroy() == nil)
 	assert.T(t, image.Image == nil)
+	assert.T(t, image.ImageInfo == nil)
 }
 
 func TestResize(t *testing.T) {

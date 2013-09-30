@@ -30,10 +30,10 @@ func main() {
 
 	image.Quality(50)
 	image.Strip()
+	image.Progressive()
 	log.Print("Transforming")
 	log.Printf("size: %d %d", image.Width(), image.Height())
 	err = image.Resize("2000x2000!")
-	image.Progressive()
 	log.Printf("Transforming image took %v\n", time.Now().Sub(start))
 	start = time.Now()
 	if err != nil {
@@ -43,6 +43,10 @@ func main() {
 
 	log.Printf("Writing to %s", output)
 	err = image.ToFile(output)
+	if err != nil {
+		log.Printf("Problem with writing %v", err)
+		os.Exit(1)
+	}
 	log.Printf("Writing image took %v\n", time.Now().Sub(start))
 	log.Printf("Wrote to %s", output)
 
