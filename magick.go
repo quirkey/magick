@@ -278,13 +278,16 @@ func (im *MagickImage) GetProperty(prop string) (value string) {
 
 // SetProperty() saves the given string value either to specific known
 // attribute or to a freeform property string on the underlying Image
-func (im *MagickImage) SetProperty(prop, value string) (ok bool) {
+func (im *MagickImage) SetProperty(prop, value string) (err error) {
 	c_prop := C.CString(prop)
 	defer C.free(unsafe.Pointer(c_prop))
 	c_value := C.CString(value)
 	defer C.free(unsafe.Pointer(c_value))
-	success := C.SetImageProperty(im.Image, c_prop, c_value)
-	return success == C.MagickTrue
+	ok := C.SetImageProperty(im.Image, c_prop, c_value)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not set property"}
+	}
+	return
 }
 
 // ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick

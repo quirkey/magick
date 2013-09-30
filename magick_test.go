@@ -166,9 +166,9 @@ func TestHeight(t *testing.T) {
 
 func TestSetProperty(t *testing.T) {
 	image := setupImage(t)
-	ok := image.SetProperty("sampling-factor", "4:4:4")
-	assert.T(t, ok)
-	factor := image.GetProperty("sampling-factor")
+	err := image.SetProperty("jpeg:sampling-factor", "4:4:4")
+	assert.T(t, err == nil)
+	factor := image.GetProperty("jpeg:sampling-factor")
 	assert.Equal(t, "4:4:4", factor)
 }
 
