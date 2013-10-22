@@ -134,6 +134,7 @@ Image *Negate(Image *image, ExceptionInfo *exception){
 */
 import "C"
 import (
+	"io/ioutil"
 	"math"
 	"os"
 	"strings"
@@ -211,7 +212,13 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	}
 	success = C.GetBlobSupport(info)
 	if success != C.MagickTrue {
-		return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs"}
+		// No blob support, lets try reading from a file
+		file, err := ioutil.TempFile("", "image."+extension)
+		if _, err = file.Write(blob); err != nil {
+			return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs and could not write temp file"}
+		}
+		file.Close()
+		return NewFromFile(file.Name())
 	}
 	blob_copy := make([]byte, len(blob))
 	copy(blob_copy, blob)

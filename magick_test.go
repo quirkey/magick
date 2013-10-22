@@ -41,6 +41,16 @@ func TestImageFromBlob(t *testing.T) {
 	assert.T(t, image.ImageInfo != nil)
 }
 
+func TestPDFFromBlob(t *testing.T) {
+	filename := "test/heart_original.pdf"
+	source, _ := ioutil.ReadFile(filename)
+	image, error := NewFromBlob(source, "pdf")
+	assert.T(t, error == nil)
+	assert.T(t, image != nil)
+	assert.T(t, image.Image != nil)
+	assert.T(t, image.ImageInfo != nil)
+}
+
 func TestParseGeometry(t *testing.T) {
 	image := setupImage(t)
 	geometry, err := image.ParseGeometry("100x100>")
@@ -86,6 +96,24 @@ func TestResize(t *testing.T) {
 	image = setupImage(t)
 	err = image.Resize("blurgh")
 	assert.T(t, err != nil)
+}
+
+func TestPDFResize(t *testing.T) {
+	filename := "test/heart_original.pdf"
+	source, _ := ioutil.ReadFile(filename)
+	image, err := NewFromBlob(source, "pdf")
+	assert.T(t, err == nil)
+	err = image.Resize("100x100!")
+	assert.T(t, err == nil)
+	assert.Equal(t, 100, image.Width())
+	assert.Equal(t, 100, image.Height())
+	if err == nil {
+		filename = "test/test_from_pdf.jpg"
+		log.Print(filename)
+		os.Remove(filename)
+		err = image.ToFile(filename)
+		assert.T(t, err == nil)
+	}
 }
 
 func TestCrop(t *testing.T) {
