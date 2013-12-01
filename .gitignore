@@ -9,6 +9,8 @@ parallel
 large
 *.jpg
 *.png
+*.prof
+*.mprof
 examples/thumbnail
 examples/parallel
 examples/*.png

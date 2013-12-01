@@ -220,10 +220,10 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		file.Close()
 		return NewFromFile(file.Name())
 	}
-	blob_copy := make([]byte, len(blob))
-	copy(blob_copy, blob)
-	length := (C.size_t)(len(blob_copy))
-	blob_start := unsafe.Pointer(&blob_copy[0])
+	//blob_copy := make([]byte, len(blob))
+	// copy(blob_copy, blob)
+	length := (C.size_t)(len(blob))
+	blob_start := unsafe.Pointer(&blob[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
 
 	if image == nil {
