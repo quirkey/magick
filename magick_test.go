@@ -288,3 +288,12 @@ func TestFullStack(t *testing.T) {
 		assert.T(t, err == nil)
 	}
 }
+
+func BenchmarkShadow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		filename := "test/heart_original.png"
+		image, _ := NewFromFile(filename)
+		_ = image.Shadow("#000", 90, 10, 0, 0)
+		image.Destroy()
+	}
+}
