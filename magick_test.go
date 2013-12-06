@@ -3,7 +3,6 @@ package magick
 import (
 	"github.com/bmizerany/assert"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
@@ -109,7 +108,6 @@ func TestPDFResize(t *testing.T) {
 	assert.Equal(t, 100, image.Height())
 	if err == nil {
 		filename = "test/test_from_pdf.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -210,7 +208,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_resize.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -221,7 +218,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_crop.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -232,7 +228,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_shadow.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -243,7 +238,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_fill.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -268,7 +262,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_alpha.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -282,10 +275,18 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_alpha_negative.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
+	}
+}
+
+func BenchmarkFillBackgroundColor(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		filename := "test/heart_original.png"
+		image, _ := NewFromFile(filename)
+		_ = image.FillBackgroundColor("#CCC")
+		image.Destroy()
 	}
 }
 
