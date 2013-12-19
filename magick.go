@@ -11,7 +11,7 @@
 package magick
 
 /*
-#cgo pkg-config: MagickCore
+#cgo pkg-config: MagickCore 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,12 +27,14 @@ MagickBooleanType GetBlobSupport(ImageInfo *image_info)
 {
   ExceptionInfo *exception;
   const MagickInfo *magick_info;
+  MagickBooleanType supported;
 
   exception = AcquireExceptionInfo();
   magick_info = GetMagickInfo(image_info->magick,exception);
   CatchException(exception);
   DestroyExceptionInfo(exception);
-  return GetMagickBlobSupport(magick_info);
+  supported = GetMagickBlobSupport(magick_info);
+  return supported;
 }
 
 Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
@@ -204,12 +206,12 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
-	cloned_info := C.CloneImageInfo(info)
 	var success (C.MagickBooleanType)
 	success = C.SetImageInfo(info, 1, exception)
 	if success != C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
+	cloned_info := C.CloneImageInfo(info)
 	success = C.GetBlobSupport(info)
 	if success != C.MagickTrue {
 		// No blob support, lets try reading from a file
@@ -220,8 +222,6 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		file.Close()
 		return NewFromFile(file.Name())
 	}
-	//blob_copy := make([]byte, len(blob))
-	// copy(blob_copy, blob)
 	length := (C.size_t)(len(blob))
 	blob_start := unsafe.Pointer(&blob[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
@@ -239,8 +239,12 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 
 // Destroy frees the C memory for the image. Should be called after processing is done.
 func (im *MagickImage) Destroy() (err error) {
-	C.DestroyImage(im.Image)
-	C.DestroyImageInfo(im.ImageInfo)
+	if im.Image != nil {
+		C.DestroyImage(im.Image)
+	}
+	if im.ImageInfo != nil {
+		C.DestroyImageInfo(im.ImageInfo)
+	}
 	im.Image = nil
 	im.ImageInfo = nil
 	return
