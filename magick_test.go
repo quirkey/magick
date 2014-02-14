@@ -39,6 +39,9 @@ func TestImageFromBlob(t *testing.T) {
 	assert.T(t, image != nil)
 	assert.T(t, image.Image != nil)
 	assert.T(t, image.ImageInfo != nil)
+	image, error = NewFromBlob([]byte{}, "png")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
 }
 
 func TestPDFFromBlob(t *testing.T) {
