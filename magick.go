@@ -237,6 +237,9 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		return NewFromFile(file.Name())
 	}
 	length := (C.size_t)(len(blob))
+	if length == 0 {
+		return nil, &MagickError{"fatal", "", "empty blob"}
+	}
 	blob_start := unsafe.Pointer(&blob[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
 
