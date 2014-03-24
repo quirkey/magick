@@ -11,7 +11,7 @@
 package magick
 
 /*
-#cgo pkg-config: MagickCore 
+#cgo pkg-config: MagickCore
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,33 +21,6 @@ package magick
 void SetImageInfoFilename(ImageInfo *image_info, char *filename)
 {
   (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
-}
-
-MagickBooleanType GetBlobSupport(ImageInfo *image_info)
-{
-  ExceptionInfo *exception;
-  const MagickInfo *magick_info;
-  MagickBooleanType supported;
-
-  exception = AcquireExceptionInfo();
-  magick_info = GetMagickInfo(image_info->magick,exception);
-  CatchException(exception);
-  DestroyExceptionInfo(exception);
-  supported = GetMagickBlobSupport(magick_info);
-  return supported;
-}
-
-Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
-{
-  Image *image;
-  ExceptionInfo *exception;
-  exception = AcquireExceptionInfo();
-  image_info->blob = blob;
-  image_info->length = length;
-  image = ReadImage(image_info, exception);
-  CatchException(exception);
-  DestroyExceptionInfo(exception);
-  return image;
 }
 
 MagickBooleanType CheckException(ExceptionInfo *exception)
@@ -79,6 +52,41 @@ MagickBooleanType CheckException(ExceptionInfo *exception)
   UnlockSemaphoreInfo(exception->semaphore);
   return haserr == 0 ? MagickFalse : MagickTrue;
 }
+
+MagickBooleanType GetBlobSupport(ImageInfo *image_info)
+{
+  ExceptionInfo *exception;
+  const MagickInfo *magick_info;
+  MagickBooleanType supported;
+  MagickBooleanType err;
+
+  exception = AcquireExceptionInfo();
+  magick_info = GetMagickInfo(image_info->magick,exception);
+  if (magick_info == (const MagickInfo *) NULL) {
+      return MagickFalse;
+  }
+  err = CheckException(exception);
+  DestroyExceptionInfo(exception);
+  if (err == MagickTrue) {
+    return MagickFalse;
+  }
+  supported = GetMagickBlobSupport(magick_info);
+  return supported;
+}
+
+Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
+{
+  Image *image;
+  ExceptionInfo *exception;
+  exception = AcquireExceptionInfo();
+  image_info->blob = blob;
+  image_info->length = length;
+  image = ReadImage(image_info, exception);
+  CatchException(exception);
+  DestroyExceptionInfo(exception);
+  return image;
+}
+
 
 Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
   const double sigma,const ssize_t x_offset,const ssize_t y_offset,
@@ -199,6 +207,12 @@ func NewFromFile(filename string) (im *MagickImage, err error) {
 // image type (e.g. "png", "jpg", etc). It loads the image data and returns a MagickImage.
 // The extension is required so that Magick knows what processor to use.
 func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
+	if len(blob) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length blob passed to NewFromBlob"}
+	}
+	if len(extension) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length extension passed to NewFromBlob"}
+	}
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
