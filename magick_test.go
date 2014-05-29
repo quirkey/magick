@@ -38,6 +38,48 @@ func TestImageFromBlob(t *testing.T) {
 	assert.T(t, image != nil)
 	assert.T(t, image.Image != nil)
 	assert.T(t, image.ImageInfo != nil)
+	image, error = NewFromBlob([]byte{}, "png")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+}
+
+func TestBadDataFromBlob(t *testing.T) {
+	filename := "test/heart_original.png"
+	source, _ := ioutil.ReadFile(filename)
+	image, error := NewFromBlob(source, "")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
+
+	image, error = NewFromBlob([]byte(""), "png")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
+
+	image, error = NewFromBlob([]byte("blah"), "jpg")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
+
+	image, error = NewFromBlob([]byte("   "), "image/jpg")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
+
+	image, error = NewFromBlob([]byte(""), " ")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
+	image, error = NewFromBlob([]byte(""), ":")
+	assert.T(t, error != nil)
+	assert.T(t, image == nil)
+	image = nil
+	error = nil
 }
 
 func TestPDFFromBlob(t *testing.T) {

@@ -12,125 +12,7 @@ package magick
 
 /*
 #cgo pkg-config: MagickCore
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <magick/MagickCore.h>
-
-void SetImageInfoFilename(ImageInfo *image_info, char *filename)
-{
-  (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
-}
-
-MagickBooleanType GetBlobSupport(ImageInfo *image_info)
-{
-  ExceptionInfo *exception;
-  const MagickInfo *magick_info;
-
-  exception = AcquireExceptionInfo();
-  magick_info = GetMagickInfo(image_info->magick,exception);
-  CatchException(exception);
-  DestroyExceptionInfo(exception);
-  return GetMagickBlobSupport(magick_info);
-}
-
-Image *ReadImageFromBlob(ImageInfo *image_info, void *blob, size_t length)
-{
-  Image *image;
-  ExceptionInfo *exception;
-  exception = AcquireExceptionInfo();
-  image_info->blob = blob;
-  image_info->length = length;
-  image = ReadImage(image_info, exception);
-  CatchException(exception);
-  DestroyExceptionInfo(exception);
-  return image;
-}
-
-MagickBooleanType CheckException(ExceptionInfo *exception)
-{
-  register const ExceptionInfo
-    *p;
-  int haserr = 0;
-
-  assert(exception != (ExceptionInfo *) NULL);
-  assert(exception->signature == MagickSignature);
-  if (exception->exceptions  == (void *) NULL)
-    return MagickFalse;
-
-  LockSemaphoreInfo(exception->semaphore);
-  ResetLinkedListIterator((LinkedListInfo *) exception->exceptions);
-  p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
-    exception->exceptions);
-  while (p != (const ExceptionInfo *) NULL)
-  {
-    if ((p->severity >= WarningException) && (p->severity < ErrorException))
-      haserr = 1;
-    if ((p->severity >= ErrorException) && (p->severity < FatalErrorException))
-      haserr = 1;
-    if (p->severity >= FatalErrorException)
-      haserr = 1;
-    p=(const ExceptionInfo *) GetNextValueInLinkedList((LinkedListInfo *)
-      exception->exceptions);
-  }
-  UnlockSemaphoreInfo(exception->semaphore);
-  return haserr == 0 ? MagickFalse : MagickTrue;
-}
-
-Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
-  const double sigma,const ssize_t x_offset,const ssize_t y_offset,
-  ExceptionInfo *exception)
-{
-
-  Image *shadow_image;
-  if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
-  }
-  shadow_image = ShadowImage(image, opacity, sigma, x_offset, y_offset, exception);
-  AppendImageToList(&shadow_image, image);
-  if (QueryColorDatabase("none", &shadow_image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
-  }
-  image = MergeImageLayers(shadow_image, MergeLayer, exception);
-  DestroyImage(shadow_image);
-  return image;
-}
-
-Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *exception)
-{
-    Image *new_image;
-    new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-    if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-      return MagickFalse;
-    }
-    if (SetImageBackgroundColor(image) == MagickFalse) {
-      return MagickFalse;
-    }
-    AppendImageToList(&image, new_image);
-    image = MergeImageLayers(image, MergeLayer, exception);
-    DestroyImage(new_image);
-    return image;
-}
-
-Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
-  Image *new_image;
-  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-  if (SeparateImageChannel(new_image, 0x0008) == MagickFalse){
-    return MagickFalse;
-  }
-  return new_image;
-}
-
-Image *Negate(Image *image, ExceptionInfo *exception){
-  Image *new_image;
-  new_image = CloneImage(image, 0, 0, MagickTrue, exception);
-  if (NegateImage(new_image, MagickTrue) == MagickFalse){
-    return MagickFalse;
-  }
-  return new_image;
-}
-
+#include "magick.h"
 */
 import "C"
 import (
@@ -197,6 +79,12 @@ func NewFromFile(filename string) (im *MagickImage, err error) {
 // image type (e.g. "png", "jpg", etc). It loads the image data and returns a MagickImage.
 // The extension is required so that Magick knows what processor to use.
 func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
+	if len(blob) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length blob passed to NewFromBlob"}
+	}
+	if len(extension) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length extension passed to NewFromBlob"}
+	}
 	exception := C.AcquireExceptionInfo()
 	defer C.DestroyExceptionInfo(exception)
 	info := C.AcquireImageInfo()
@@ -204,12 +92,12 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	c_filename := C.CString("image." + extension)
 	defer C.free(unsafe.Pointer(c_filename))
 	C.SetImageInfoFilename(info, c_filename)
-	cloned_info := C.CloneImageInfo(info)
 	var success (C.MagickBooleanType)
 	success = C.SetImageInfo(info, 1, exception)
 	if success != C.MagickTrue {
 		return nil, ErrorFromExceptionInfo(exception)
 	}
+	cloned_info := C.CloneImageInfo(info)
 	success = C.GetBlobSupport(info)
 	if success != C.MagickTrue {
 		// No blob support, lets try reading from a file
@@ -220,9 +108,10 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		file.Close()
 		return NewFromFile(file.Name())
 	}
-	//blob_copy := make([]byte, len(blob))
-	// copy(blob_copy, blob)
 	length := (C.size_t)(len(blob))
+	if length == 0 {
+		return nil, &MagickError{"fatal", "", "empty blob"}
+	}
 	blob_start := unsafe.Pointer(&blob[0])
 	image := C.ReadImageFromBlob(info, blob_start, length)
 
@@ -239,8 +128,12 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 
 // Destroy frees the C memory for the image. Should be called after processing is done.
 func (im *MagickImage) Destroy() (err error) {
-	C.DestroyImage(im.Image)
-	C.DestroyImageInfo(im.ImageInfo)
+	if im.Image != nil {
+		C.DestroyImage(im.Image)
+	}
+	if im.ImageInfo != nil {
+		C.DestroyImageInfo(im.ImageInfo)
+	}
 	im.Image = nil
 	im.ImageInfo = nil
 	return

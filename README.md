@@ -39,7 +39,7 @@ defer image.Destroy()
 err = image.Resize("400x200")
 err = image.Shadow("#F00", 255, 5, 2, 2)
 err = image.FillBackgroundColor("#00F")
-a_new_byteslice, err = image.ToBlog("jpg")
+a_new_byteslice, err = image.ToBlob("jpg")
 ```
 
 For full API see the [API docs](http://godoc.org/github.com/quirkey/magick)
