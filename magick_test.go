@@ -3,7 +3,6 @@ package magick
 import (
 	"github.com/bmizerany/assert"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
@@ -151,7 +150,6 @@ func TestPDFResize(t *testing.T) {
 	assert.Equal(t, 100, image.Height())
 	if err == nil {
 		filename = "test/test_from_pdf.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -202,7 +200,7 @@ func TestToBlob(t *testing.T) {
 	assert.T(t, err == nil)
 	assert.T(t, bytes != nil)
 	assert.T(t, len(bytes) > 0)
-	assert.Equal(t, 437198, len(bytes))
+	assert.Equal(t, 437185, len(bytes))
 }
 
 func TestToFile(t *testing.T) {
@@ -216,7 +214,7 @@ func TestToFile(t *testing.T) {
 	defer file.Close()
 	stat, err := file.Stat()
 	assert.T(t, stat != nil)
-	assert.Equal(t, (int64)(437198), stat.Size())
+	assert.Equal(t, (int64)(437185), stat.Size())
 }
 
 func TestType(t *testing.T) {
@@ -252,7 +250,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_resize.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -263,7 +260,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_crop.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -274,7 +270,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_shadow.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -285,7 +280,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_fill.png"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -310,7 +304,6 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_alpha.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
@@ -324,9 +317,26 @@ func TestFullStack(t *testing.T) {
 	assert.T(t, err == nil)
 	if err == nil {
 		filename = "test/test_alpha_negative.jpg"
-		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
+	}
+}
+
+func BenchmarkFillBackgroundColor(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		filename := "test/heart_original.png"
+		image, _ := NewFromFile(filename)
+		_ = image.FillBackgroundColor("#CCC")
+		image.Destroy()
+	}
+}
+
+func BenchmarkShadow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		filename := "test/heart_original.png"
+		image, _ := NewFromFile(filename)
+		_ = image.Shadow("#000", 90, 10, 0, 0)
+		image.Destroy()
 	}
 }
