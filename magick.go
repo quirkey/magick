@@ -23,6 +23,11 @@ void SetImageInfoFilename(ImageInfo *image_info, char *filename)
   (void) CopyMagickString(image_info->filename,filename,MaxTextExtent);
 }
 
+void SetImageInfoGeometry(ImageInfo *image_info, char *geometry)
+{
+  (void) CopyMagickString(image_info->size,geometry,MaxTextExtent);
+}
+
 MagickBooleanType CheckException(ExceptionInfo *exception)
 {
   register const ExceptionInfo
@@ -144,6 +149,7 @@ Image *Negate(Image *image, ExceptionInfo *exception){
 */
 import "C"
 import (
+	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
@@ -236,6 +242,48 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 		file.Close()
 		return NewFromFile(file.Name())
 	}
+	length := (C.size_t)(len(blob))
+	if length == 0 {
+		return nil, &MagickError{"fatal", "", "empty blob"}
+	}
+	blob_start := unsafe.Pointer(&blob[0])
+	image := C.ReadImageFromBlob(info, blob_start, length)
+
+	if image == nil {
+		return nil, &MagickError{"fatal", "", "corrupt image, not a " + extension}
+	}
+
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
+	}
+
+	return &MagickImage{Image: image, ImageInfo: cloned_info}, nil
+}
+
+func NewFromBGRABlob(blob []byte, width, height int) (im *MagickImage, err error) {
+	extension := "bgra"
+	if len(blob) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length blob passed to NewFromBlob"}
+	}
+	if len(extension) < 1 {
+		return nil, &MagickError{"fatal", "", "zero length extension passed to NewFromBlob"}
+	}
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+	info := C.AcquireImageInfo()
+	defer C.DestroyImageInfo(info)
+	c_filename := C.CString("image." + extension)
+	defer C.free(unsafe.Pointer(c_filename))
+	C.SetImageInfoFilename(info, c_filename)
+	geometry := C.CString(fmt.Sprintf("%dx%d", width, height))
+	defer C.free(unsafe.Pointer(geometry))
+	C.SetImageInfoGeometry(info, geometry)
+	var success (C.MagickBooleanType)
+	success = C.SetImageInfo(info, 1, exception)
+	if success != C.MagickTrue {
+		return nil, ErrorFromExceptionInfo(exception)
+	}
+	cloned_info := C.CloneImageInfo(info)
 	length := (C.size_t)(len(blob))
 	if length == 0 {
 		return nil, &MagickError{"fatal", "", "empty blob"}

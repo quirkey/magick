@@ -44,6 +44,17 @@ func TestImageFromBlob(t *testing.T) {
 	assert.T(t, image == nil)
 }
 
+func TestBGRAFromBlob(t *testing.T) {
+	filename := "test/buffer.bgra"
+	source, _ := ioutil.ReadFile(filename)
+	image, error := NewFromBGRABlob(source, 800, 800)
+	assert.T(t, error == nil)
+	assert.T(t, image != nil)
+	assert.T(t, image.Image != nil)
+	assert.T(t, image.ImageInfo != nil)
+	image.ToBlob("png")
+}
+
 func TestBadDataFromBlob(t *testing.T) {
 	filename := "test/heart_original.png"
 	source, _ := ioutil.ReadFile(filename)
