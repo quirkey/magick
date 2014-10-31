@@ -8,11 +8,11 @@ wrapper around the proven ImageMagick lib.
 
 ### ImageMagick is Magic
 
-Though Go's stdlib includes utilities for working with images, ImageMagick is one of the industry standards, not only in its relative ease-of-use for simple operations (like thumbnailing) but also in it's smart anti-aliasing and other proven techniques. We wanted to utilize the fast and conccurent environment that Go provides with the known and reliable output of what we were already seeing with ImageMagick.
+Though Go's stdlib includes utilities for working with images, ImageMagick is one of the industry standards, not only in its relative ease-of-use for simple operations (like thumbnailing) but also in it's smart anti-aliasing and other proven techniques. We wanted to utilize the fast and concurrent environment that Go provides with the known and reliable output of what we were already seeing with ImageMagick.
 
 ### Simple, High-level Operations
 
-There are other libraries that wrap ImageMagick or related libraries, but we were looking/aiming for something that had simple functions that handled the most common operations, that we wanted needed in our web applications: Thumbnailing (Resizing/Cropping), adding shadows, converting to jpg, etc.
+There are other libraries that wrap ImageMagick or related libraries, but we were looking/aiming for something that had simple functions that handled the most common operations, that we wanted and needed in our web applications: Thumbnailing (Resizing/Cropping), adding shadows, converting to jpg, etc.
 
 ### Works with BLOBs
 
@@ -48,7 +48,7 @@ For full API see the [API docs](http://godoc.org/github.com/quirkey/magick)
 
 magick has been thorougly tested and is memory-leak free as long as you always `Destroy()` MagickImage's after you no longer need them.
 
-Internally, MagickCore can be used concurrently without issues, though weve observed crashes/issues with concurrent usage when ImageMagick is compiled with OpenMP on OS X (this happens to be the default with homebrew). Mileage may vary.
+Internally, MagickCore can be used concurrently without issues, though we've observed crashes/issues with concurrent usage when ImageMagick is compiled with OpenMP on OS X (this happens to be the default with homebrew). Mileage may vary.
 
 ## TODO
 
