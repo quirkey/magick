@@ -86,8 +86,8 @@ func TestBadDataFromBlob(t *testing.T) {
 func TestPDFFromBlob(t *testing.T) {
 	filename := "test/heart_original.pdf"
 	source, _ := ioutil.ReadFile(filename)
-	image, error := NewFromBlob(source, "pdf")
-	assert.T(t, error == nil)
+	image, err := NewFromBlob(source, "pdf")
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.T(t, image != nil)
 	assert.T(t, image.Image != nil)
 	assert.T(t, image.ImageInfo != nil)
@@ -96,7 +96,7 @@ func TestPDFFromBlob(t *testing.T) {
 func TestParseGeometry(t *testing.T) {
 	image := setupImage(t)
 	geometry, err := image.ParseGeometry("100x100>")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.T(t, geometry != nil)
 	assert.Equal(t, 100, geometry.Width)
 }
@@ -111,14 +111,14 @@ func TestResizeRatio(t *testing.T) {
 func TestStrip(t *testing.T) {
 	image := setupImage(t)
 	err := image.Strip()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 }
 
 func TestProgressive(t *testing.T) {
 	image := setupImage(t)
 	image.Progressive()
 	_, err := image.ToBlob("jpg")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 }
 
 func TestDestroy(t *testing.T) {
@@ -131,7 +131,7 @@ func TestDestroy(t *testing.T) {
 func TestResize(t *testing.T) {
 	image := setupImage(t)
 	err := image.Resize("100x100!")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.Equal(t, 100, image.Width())
 	assert.Equal(t, 100, image.Height())
 
@@ -144,9 +144,9 @@ func TestPDFResize(t *testing.T) {
 	filename := "test/heart_original.pdf"
 	source, _ := ioutil.ReadFile(filename)
 	image, err := NewFromBlob(source, "pdf")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	err = image.Resize("100x100!")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.Equal(t, 100, image.Width())
 	assert.Equal(t, 100, image.Height())
 	if err == nil {
@@ -154,14 +154,14 @@ func TestPDFResize(t *testing.T) {
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 }
 
 func TestCrop(t *testing.T) {
 	image := setupImage(t)
 	err := image.Crop("100x100!+10+10")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.Equal(t, 100, image.Width())
 	assert.Equal(t, 100, image.Height())
 
@@ -173,33 +173,33 @@ func TestCrop(t *testing.T) {
 func TestShadow(t *testing.T) {
 	image := setupImage(t)
 	err := image.Shadow("#000", 75, 2, 0, 0)
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 }
 
 func TestFillBackgroundColor(t *testing.T) {
 	image := setupImage(t)
 	err := image.FillBackgroundColor("#CCC")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 }
 
 func TestSeparateAlphaChannel(t *testing.T) {
 	image := setupImage(t)
 	err := image.SeparateAlphaChannel()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.T(t, image != nil)
 }
 
 func TestNegateImage(t *testing.T) {
 	image := setupImage(t)
 	err := image.Negate()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.T(t, image != nil)
 }
 
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	assert.T(t, bytes != nil)
 	assert.T(t, len(bytes) > 0)
 	assert.Equal(t, 437198, len(bytes))
@@ -210,9 +210,9 @@ func TestToFile(t *testing.T) {
 	filename := "test/test_out.png"
 	os.Remove(filename)
 	err := image.ToFile(filename)
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	file, err := os.Open(filename)
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	defer file.Close()
 	stat, err := file.Stat()
 	assert.T(t, stat != nil)
@@ -237,7 +237,7 @@ func TestHeight(t *testing.T) {
 func TestSetProperty(t *testing.T) {
 	image := setupImage(t)
 	err := image.SetProperty("jpeg:sampling-factor", "4:4:4")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	factor := image.GetProperty("jpeg:sampling-factor")
 	assert.Equal(t, "4:4:4", factor)
 }
@@ -249,84 +249,84 @@ func TestFullStack(t *testing.T) {
 	// resize
 	image = setupImage(t)
 	err = image.Resize("100x100")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_resize.png"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// crop
 	image = setupImage(t)
 	err = image.Crop("100x100+10+10")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_crop.png"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// shadow
 	image = setupImage(t)
 	err = image.Shadow("#000", 90, 10, 0, 0)
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_shadow.png"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// fill
 	image = setupImage(t)
 	err = image.FillBackgroundColor("red")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_fill.png"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// combination
 	image = setupImage(t)
 	err = image.Resize("100x100>")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	err = image.Shadow("#000", 90, 10, 0, 0)
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	err = image.FillBackgroundColor("#CCC")
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_combo.jpg"
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// alpha mask
 	image = setupImage(t)
 	err = image.SeparateAlphaChannel()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_alpha.jpg"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 	// alpha mask + negate
 	image = setupImage(t)
 	err = image.SeparateAlphaChannel()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 
 	err = image.Negate()
-	assert.T(t, err == nil)
+	assert.Tf(t, err == nil, "ERROR: %s", err)
 	if err == nil {
 		filename = "test/test_alpha_negative.jpg"
 		log.Print(filename)
 		os.Remove(filename)
 		err = image.ToFile(filename)
-		assert.T(t, err == nil)
+		assert.Tf(t, err == nil, "ERROR: %s", err)
 	}
 }
