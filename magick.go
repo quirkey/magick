@@ -374,6 +374,19 @@ func (im *MagickImage) Resize(geometry string) (err error) {
 	return nil
 }
 
+// IntegralRotateImage rotates the image an integral of 90 degrees
+func (im *MagickImage) IntegralRotateImage(rotations int) (err error) {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+
+	new_image := C.IntegralRotateImage(im.Image, C.size_t(rotations), exception)
+	if failed := C.CheckException(exception); failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+	im.ReplaceImage(new_image)
+	return nil
+}
+
 // Crop crops the image based on the geometry string passed and stores the cropped image in place
 // For more info about Geometry see http://www.imagemagick.org/script/command-line-processing.php#geometry
 func (im *MagickImage) Crop(geometry string) (err error) {

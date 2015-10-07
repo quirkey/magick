@@ -196,6 +196,14 @@ func TestNegateImage(t *testing.T) {
 	assert.T(t, image != nil)
 }
 
+func TestIntegralRotateImage(t *testing.T) {
+	image := setupImage(t)
+	err := image.IntegralRotateImage(1)
+	assert.T(t, err == nil)
+	assert.Equal(t, 552, image.Width())
+	assert.Equal(t, 600, image.Height())
+}
+
 func TestToBlob(t *testing.T) {
 	image := setupImage(t)
 	bytes, err := image.ToBlob("png")
