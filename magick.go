@@ -178,6 +178,29 @@ type MagickError struct {
 	Description string
 }
 
+type Colorspace C.ColorspaceType
+
+const (
+	RGB           Colorspace = C.RGBColorspace         // Red, Green, Blue colorspace.
+	GRAY          Colorspace = C.GRAYColorspace        // Similar to Luma (Y) according to ITU-R 601
+	TRANSPARENT   Colorspace = C.TransparentColorspace // RGB which preserves the matte while quantizing colors.
+	XYZ           Colorspace = C.XYZColorspace         // CIE XYZ
+	YCC           Colorspace = C.YCCColorspace         // Kodak PhotoCD PhotoYCC
+	YUV           Colorspace = C.YUVColorspace         // YUV colorspace as used for computer video.
+	CMYK          Colorspace = C.CMYKColorspace        // Cyan, Magenta, Yellow, Black colorspace.
+	SRGB          Colorspace = C.sRGBColorspace        // Kodak PhotoCD sRGB
+	HSL           Colorspace = C.HSLColorspace         // Hue, saturation, luminosity
+	HWB           Colorspace = C.HWBColorspace         // Hue, whiteness, blackness
+	LAB           Colorspace = C.LABColorspace         // ITU LAB
+	REC_601_LUMA  Colorspace = C.Rec601LumaColorspace  // Luma (Y) according to ITU-R 601
+	REC_601_YCBCR Colorspace = C.Rec601YCbCrColorspace // YCbCr according to ITU-R 601
+	REC_709_LUMA  Colorspace = C.Rec709LumaColorspace  // Luma (Y) according to ITU-R 709
+	REC_709_YCBCR Colorspace = C.Rec709YCbCrColorspace // YCbCr according to ITU-R 709
+	OHTA          Colorspace = C.OHTAColorspace
+	YIQ           Colorspace = C.YIQColorspace
+	YPBPR         Colorspace = C.YPbPrColorspace
+)
+
 func (err *MagickError) Error() string {
 	return "MagickError " + err.Severity + ": " + err.Reason + "- " + err.Description
 }
@@ -314,6 +337,16 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 	ok := C.SetImageProperty(im.Image, c_prop, c_value)
 	if ok == C.MagickFalse {
 		return &MagickError{"error", "", "could not set property"}
+	}
+	return
+}
+
+// Colorspace() allows to set colorspace to image
+func (im *MagickImage) Colorspace(cs Colorspace) (err error) {
+	c_colorspace := C.ColorspaceType(cs)
+	ok := C.SetImageColorspace(im.Image, c_colorspace)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not set colorspace"}
 	}
 	return
 }

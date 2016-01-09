@@ -1,7 +1,11 @@
+# About
+
+This is a fork of [github.com/quirkey/magick](http://github.com/quirkey/magick) with `Colorspace(...)` support
+
 # magick
 
-magick implements image manipulation routines based on the 
-ImageMagick MagickCore C library in Go. It is an opinionated high level 
+magick implements image manipulation routines based on the
+ImageMagick MagickCore C library in Go. It is an opinionated high level
 wrapper around the proven ImageMagick lib.
 
 ## Why
@@ -67,4 +71,3 @@ magick depends on ImageMagick and specifically the [MagickCore](http://www.image
 ## Who
 
 magick is written and maintained by Aaron Quint ([@aq](http://twitter.com/aq)) and Mike Bernstein ([@mrb_bk](http://twitter.com/mrb_bk))
-

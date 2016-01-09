@@ -242,6 +242,12 @@ func TestSetProperty(t *testing.T) {
 	assert.Equal(t, "4:4:4", factor)
 }
 
+func TestColorspace(t *testing.T) {
+	image := setupImage(t)
+	err := image.Colorspace(RGB)
+	assert.T(t, err == nil)
+}
+
 func TestFullStack(t *testing.T) {
 	var err error
 	var filename string
