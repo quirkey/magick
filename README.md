@@ -1,6 +1,6 @@
 # About
 
-This is a fork of [github.com/quirkey/magick](http://github.com/quirkey/magick) with `Colorspace(...)` support
+This is a fork of [github.com/quirkey/magick](http://github.com/quirkey/magick) with `Colorspace(...)` and `SetImageType(...)` support
 
 # magick
 

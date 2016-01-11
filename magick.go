@@ -201,6 +201,21 @@ const (
 	YPBPR         Colorspace = C.YPbPrColorspace
 )
 
+type ImageType C.ImageType
+
+const (
+	Bilevel              ImageType = C.BilevelType
+	Grayscale            ImageType = C.GrayscaleType
+	GrayscaleMatte       ImageType = C.GrayscaleMatteType
+	Palette              ImageType = C.PaletteType
+	PaletteMatte         ImageType = C.PaletteMatteType
+	TrueColor            ImageType = C.TrueColorType
+	TrueColorMatte       ImageType = C.TrueColorMatteType
+	ColorSeparation      ImageType = C.ColorSeparationType
+	ColorSeparationMatte ImageType = C.ColorSeparationMatteType
+	Optimize             ImageType = C.OptimizeType
+)
+
 func (err *MagickError) Error() string {
 	return "MagickError " + err.Severity + ": " + err.Reason + "- " + err.Description
 }
@@ -347,6 +362,15 @@ func (im *MagickImage) Colorspace(cs Colorspace) (err error) {
 	ok := C.SetImageColorspace(im.Image, c_colorspace)
 	if ok == C.MagickFalse {
 		return &MagickError{"error", "", "could not set colorspace"}
+	}
+	return
+}
+
+func (im *MagickImage) SetImageType(tp ImageType) (err error) {
+	c_img_type := C.ImageType(tp)
+	ok := C.SetImageType(im.Image, c_img_type)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not set image type"}
 	}
 	return
 }

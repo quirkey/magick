@@ -248,6 +248,18 @@ func TestColorspace(t *testing.T) {
 	assert.T(t, err == nil)
 }
 
+func TestSetImageType(t *testing.T) {
+	image := setupImage(t)
+	err := image.SetImageType(TrueColor)
+	assert.T(t, err == nil)
+	err = image.SetImageType(Grayscale)
+	assert.T(t, err == nil)
+	err = image.SetImageType(TrueColorMatte)
+	assert.T(t, err == nil)
+	err = image.SetImageType(GrayscaleMatte)
+	assert.T(t, err == nil)
+}
+
 func TestFullStack(t *testing.T) {
 	var err error
 	var filename string
