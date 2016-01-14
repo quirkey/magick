@@ -95,12 +95,12 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
 
   Image *shadow_image;
   if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
+    return NULL;
   }
   shadow_image = ShadowImage(image, opacity, sigma, x_offset, y_offset, exception);
   AppendImageToList(&shadow_image, image);
   if (QueryColorDatabase("none", &shadow_image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
+    return NULL;
   }
   image = MergeImageLayers(shadow_image, MergeLayer, exception);
   DestroyImage(shadow_image);
@@ -112,10 +112,10 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     Image *new_image;
     new_image = CloneImage(image, 0, 0, MagickTrue, exception);
     if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-      return MagickFalse;
+      return NULL;
     }
     if (SetImageBackgroundColor(image) == MagickFalse) {
-      return MagickFalse;
+      return NULL;
     }
     AppendImageToList(&image, new_image);
     image = MergeImageLayers(image, MergeLayer, exception);
@@ -127,7 +127,7 @@ Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
   Image *new_image;
   new_image = CloneImage(image, 0, 0, MagickTrue, exception);
   if (SeparateImageChannel(new_image, 0x0008) == MagickFalse){
-    return MagickFalse;
+    return NULL;
   }
   return new_image;
 }
@@ -136,7 +136,7 @@ Image *Negate(Image *image, ExceptionInfo *exception){
   Image *new_image;
   new_image = CloneImage(image, 0, 0, MagickTrue, exception);
   if (NegateImage(new_image, MagickTrue) == MagickFalse){
-    return MagickFalse;
+    return NULL;
   }
   return new_image;
 }
@@ -352,6 +352,17 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 	ok := C.SetImageProperty(im.Image, c_prop, c_value)
 	if ok == C.MagickFalse {
 		return &MagickError{"error", "", "could not set property"}
+	}
+	return
+}
+
+// Define() defines image format options
+func (im *MagickImage) Define(prop string) (err error) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	ok := C.DefineImageProperty(im.Image, c_prop)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not define property"}
 	}
 	return
 }
