@@ -95,12 +95,12 @@ Image *AddShadowToImage(Image *image, char *colorname, const double opacity,
 
   Image *shadow_image;
   if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
+    return NULL;
   }
   shadow_image = ShadowImage(image, opacity, sigma, x_offset, y_offset, exception);
   AppendImageToList(&shadow_image, image);
   if (QueryColorDatabase("none", &shadow_image->background_color, exception) == MagickFalse) {
-    return MagickFalse;
+    return NULL;
   }
   image = MergeImageLayers(shadow_image, MergeLayer, exception);
   DestroyImage(shadow_image);
@@ -112,10 +112,10 @@ Image *FillBackgroundColor(Image *image, char *colorname, ExceptionInfo *excepti
     Image *new_image;
     new_image = CloneImage(image, 0, 0, MagickTrue, exception);
     if (QueryColorDatabase(colorname, &image->background_color, exception) == MagickFalse) {
-      return MagickFalse;
+      return NULL;
     }
     if (SetImageBackgroundColor(image) == MagickFalse) {
-      return MagickFalse;
+      return NULL;
     }
     AppendImageToList(&image, new_image);
     image = MergeImageLayers(image, MergeLayer, exception);
@@ -127,7 +127,7 @@ Image *SeparateAlphaChannel(Image *image, ExceptionInfo *exception){
   Image *new_image;
   new_image = CloneImage(image, 0, 0, MagickTrue, exception);
   if (SeparateImageChannel(new_image, 0x0008) == MagickFalse){
-    return MagickFalse;
+    return NULL;
   }
   return new_image;
 }
@@ -136,7 +136,7 @@ Image *Negate(Image *image, ExceptionInfo *exception){
   Image *new_image;
   new_image = CloneImage(image, 0, 0, MagickTrue, exception);
   if (NegateImage(new_image, MagickTrue) == MagickFalse){
-    return MagickFalse;
+    return NULL;
   }
   return new_image;
 }
@@ -177,6 +177,44 @@ type MagickError struct {
 	Reason      string
 	Description string
 }
+
+type Colorspace C.ColorspaceType
+
+const (
+	RGB           Colorspace = C.RGBColorspace         // Red, Green, Blue colorspace.
+	GRAY          Colorspace = C.GRAYColorspace        // Similar to Luma (Y) according to ITU-R 601
+	TRANSPARENT   Colorspace = C.TransparentColorspace // RGB which preserves the matte while quantizing colors.
+	XYZ           Colorspace = C.XYZColorspace         // CIE XYZ
+	YCC           Colorspace = C.YCCColorspace         // Kodak PhotoCD PhotoYCC
+	YUV           Colorspace = C.YUVColorspace         // YUV colorspace as used for computer video.
+	CMYK          Colorspace = C.CMYKColorspace        // Cyan, Magenta, Yellow, Black colorspace.
+	SRGB          Colorspace = C.sRGBColorspace        // Kodak PhotoCD sRGB
+	HSL           Colorspace = C.HSLColorspace         // Hue, saturation, luminosity
+	HWB           Colorspace = C.HWBColorspace         // Hue, whiteness, blackness
+	LAB           Colorspace = C.LABColorspace         // ITU LAB
+	REC_601_LUMA  Colorspace = C.Rec601LumaColorspace  // Luma (Y) according to ITU-R 601
+	REC_601_YCBCR Colorspace = C.Rec601YCbCrColorspace // YCbCr according to ITU-R 601
+	REC_709_LUMA  Colorspace = C.Rec709LumaColorspace  // Luma (Y) according to ITU-R 709
+	REC_709_YCBCR Colorspace = C.Rec709YCbCrColorspace // YCbCr according to ITU-R 709
+	OHTA          Colorspace = C.OHTAColorspace
+	YIQ           Colorspace = C.YIQColorspace
+	YPBPR         Colorspace = C.YPbPrColorspace
+)
+
+type ImageType C.ImageType
+
+const (
+	Bilevel              ImageType = C.BilevelType
+	Grayscale            ImageType = C.GrayscaleType
+	GrayscaleMatte       ImageType = C.GrayscaleMatteType
+	Palette              ImageType = C.PaletteType
+	PaletteMatte         ImageType = C.PaletteMatteType
+	TrueColor            ImageType = C.TrueColorType
+	TrueColorMatte       ImageType = C.TrueColorMatteType
+	ColorSeparation      ImageType = C.ColorSeparationType
+	ColorSeparationMatte ImageType = C.ColorSeparationMatteType
+	Optimize             ImageType = C.OptimizeType
+)
 
 func (err *MagickError) Error() string {
 	return "MagickError " + err.Severity + ": " + err.Reason + "- " + err.Description
@@ -314,6 +352,36 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 	ok := C.SetImageProperty(im.Image, c_prop, c_value)
 	if ok == C.MagickFalse {
 		return &MagickError{"error", "", "could not set property"}
+	}
+	return
+}
+
+// Define() defines image format options
+func (im *MagickImage) Define(prop string) (err error) {
+	c_prop := C.CString(prop)
+	defer C.free(unsafe.Pointer(c_prop))
+	ok := C.DefineImageProperty(im.Image, c_prop)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not define property"}
+	}
+	return
+}
+
+// Colorspace() allows to set colorspace to image
+func (im *MagickImage) Colorspace(cs Colorspace) (err error) {
+	c_colorspace := C.ColorspaceType(cs)
+	ok := C.SetImageColorspace(im.Image, c_colorspace)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not set colorspace"}
+	}
+	return
+}
+
+func (im *MagickImage) SetImageType(tp ImageType) (err error) {
+	c_img_type := C.ImageType(tp)
+	ok := C.SetImageType(im.Image, c_img_type)
+	if ok == C.MagickFalse {
+		return &MagickError{"error", "", "could not set image type"}
 	}
 	return
 }
