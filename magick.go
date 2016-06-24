@@ -229,12 +229,18 @@ func NewFromBlob(blob []byte, extension string) (im *MagickImage, err error) {
 	success = C.GetBlobSupport(info)
 	if success != C.MagickTrue {
 		// No blob support, lets try reading from a file
-		file, err := ioutil.TempFile("", "image."+extension)
+		file, err := ioutil.TempFile("", "image")
 		if _, err = file.Write(blob); err != nil {
 			return nil, &MagickError{"fatal", "", "image format " + extension + " does not support blobs and could not write temp file"}
 		}
 		file.Close()
-		return NewFromFile(file.Name())
+		
+		// ioutil.TempFile adds a random int as suffix, which confuses ImageMagick. Add the extension to the end of filename instead.
+		newFilename := file.Name() + "." + extension
+		os.Rename(file.Name(), newFilename)
+		defer os.Remove(newFilename)
+		
+		return NewFromFile(newFilename)
 	}
 	length := (C.size_t)(len(blob))
 	if length == 0 {
