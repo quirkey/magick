@@ -1,11 +1,12 @@
 package magick
 
 import (
-	"github.com/bmizerany/assert"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/bmizerany/assert"
 )
 
 func setupImage(t *testing.T) (image *MagickImage) {
@@ -328,5 +329,58 @@ func TestFullStack(t *testing.T) {
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
+	}
+}
+
+func TestAutoOrientNeedsToRotate(t *testing.T) {
+	// This file is set so the heart appears to need to be rotated 90 degrees
+	// clockwise. It has EXIF orientation set to indicate that.
+	//
+	// I created it from test/heart_original.png this way:
+	// convert -rotate 270 heart_original.png heart_rotated.jpg
+	// exiftool -Orientation=6 -n heart_rotated.jpg
+	filename := "test/heart_rotated.jpg"
+
+	image, err := NewFromFile(filename)
+	if err != nil {
+		t.Errorf("NewFromFile(%s) = %s", filename, err)
+		return
+	}
+
+	err = image.AutoOrient()
+	if err != nil {
+		_ = image.Destroy()
+		t.Errorf("AutoOrient() = %s", err)
+		return
+	}
+
+	err = image.Destroy()
+	if err != nil {
+		t.Errorf("Destroy() = %s", err)
+		return
+	}
+}
+
+func TestAutoOrientNoNeedToRotate(t *testing.T) {
+	// This file does not need to change.
+	filename := "test/heart_original.png"
+
+	image, err := NewFromFile(filename)
+	if err != nil {
+		t.Errorf("NewFromFile(%s) = %s", filename, err)
+		return
+	}
+
+	err = image.AutoOrient()
+	if err != nil {
+		_ = image.Destroy()
+		t.Errorf("AutoOrient() = %s", err)
+		return
+	}
+
+	err = image.Destroy()
+	if err != nil {
+		t.Errorf("Destroy() = %s", err)
+		return
 	}
 }

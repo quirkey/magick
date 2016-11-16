@@ -458,6 +458,24 @@ func (im *MagickImage) Strip() (err error) {
 	return
 }
 
+// AutoOrient adjusts an image so that its orientation is suitable for
+// viewing (i.e. top-left orientation).
+func (im *MagickImage) AutoOrient() error {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+
+	newImage := C.AutoOrientImage(im.Image, im.Image.orientation, exception)
+
+	failed := C.CheckException(exception)
+	if failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+
+	im.ReplaceImage(newImage)
+
+	return nil
+}
+
 // ToBlob takes a (transformed) MagickImage and returns a byte slice in the format you specify with extension.
 // Magick uses the extension to transform the image in to the proper encoding (e.g. "jpg", "png")
 func (im *MagickImage) ToBlob(extension string) (blob []byte, err error) {
