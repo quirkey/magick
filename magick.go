@@ -318,6 +318,28 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 	return
 }
 
+// PlusRepage runs the same logic as the +repage command line argument.
+//
+// This removes the virtual canvas metadata. It resets the canvas to match what
+// you cropped.
+//
+// After cropping you may find that the section you cropped is present at the
+// location you cropped it at surrounded on all sides by empty space/pixels.
+// This apparently occurs when the image format allows positioning sections of
+// the image via offsets, such as GIF.
+//
+// See http://www.imagemagick.org/script/command-line-options.php#repage and
+// http://www.imagemagick.org/Usage/crop/#crop_page
+//
+// The latter says: "Always use "+repage" after any 'crop' like operation.
+// Unless you actually need to preserve that info." This means it might be
+// useful for Crop() to call this function.
+func (im *MagickImage) PlusRepage() {
+	// +repage is a command line option that has no direct API equivalent. See
+	// MagickWand/operation.c for the implementation. I copy that here.
+	C.ParseAbsoluteGeometry(C.CString("0x0+0+0"), &im.Image.page)
+}
+
 // ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick
 // RectangleInfo that contains the individual properties
 func (im *MagickImage) ParseGeometryToRectangleInfo(geometry string) (info C.RectangleInfo, err error) {
