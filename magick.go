@@ -335,9 +335,12 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 // Unless you actually need to preserve that info." This means it might be
 // useful for Crop() to call this function.
 func (im *MagickImage) PlusRepage() {
+	geom := C.CString("0x0+0+0")
+	defer C.free(geom)
+
 	// +repage is a command line option that has no direct API equivalent. See
 	// MagickWand/operation.c for the implementation. I copy that here.
-	C.ParseAbsoluteGeometry(C.CString("0x0+0+0"), &im.Image.page)
+	C.ParseAbsoluteGeometry(geom, &im.Image.page)
 }
 
 // ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick
