@@ -1,11 +1,13 @@
 package magick
 
 import (
-	"github.com/bmizerany/assert"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/bmizerany/assert"
 )
 
 func setupImage(t *testing.T) (image *MagickImage) {
@@ -170,6 +172,82 @@ func TestCrop(t *testing.T) {
 	assert.T(t, err != nil)
 }
 
+// The use case for +repage is that we need to reset an image's canvas so only
+// the cropped portion is present. Cropping and not using +repage leaves the
+// canvas the same size, but with only the cropped portion's pixels remaining.
+// I believe this is only the case for certain image formats such as GIF and
+// PNG.
+//
+// Test to demonstrate the problem and show how PlusRepage() solves it.
+func TestPlusRepage(t *testing.T) {
+	filename := "test/heart_original.png"
+	image, err := NewFromFile(filename)
+	if err != nil {
+		t.Errorf("NewFromFile(%s) error = %s", filename, err)
+		return
+	}
+
+	origWidth := image.Width()
+	origHeight := image.Height()
+	origVirtualCanvasWidth := image.VirtualCanvasWidth()
+	origVirtualCanvasHeight := image.VirtualCanvasHeight()
+
+	wantedWidth := 100
+	wantedHeight := 100
+	geom := fmt.Sprintf("%dx%d!+10+10", wantedWidth, wantedHeight)
+	if err := image.Crop(geom); err != nil {
+		t.Errorf("image.Crop(%s) error = %s", geom, err)
+		_ = image.Destroy()
+		return
+	}
+
+	if image.Width() != wantedWidth || image.Height() != wantedHeight {
+		t.Errorf("image width x height after cropping is %dx%d, wanted %dx%d",
+			image.Width(), image.Height(), origWidth, origHeight)
+		_ = image.Destroy()
+		return
+	}
+
+	// The virtual canvas width x height should currently be as it was. The
+	// cropped region will be surrounded by empty space if we save it now.
+	if image.VirtualCanvasWidth() != origVirtualCanvasWidth ||
+		image.VirtualCanvasHeight() != origVirtualCanvasHeight {
+		t.Errorf("virtual canvas width x height after cropping is %dx%d, wanted %dx%d",
+			image.VirtualCanvasWidth(), image.VirtualCanvasHeight(),
+			origVirtualCanvasWidth, origVirtualCanvasHeight)
+		_ = image.Destroy()
+		return
+	}
+
+	// Reset the virtual canvas using +repage. This removes virtual canvas
+	// information. The effect of removing it means the image, once saved, will
+	// have the dimensions of the image region we cropped.
+	image.PlusRepage()
+
+	// Check both sets of dimensions again. The image size should still be the
+	// same. The virtual canvas size should be 0x0 since we removed information
+	// about it.
+
+	if image.Width() != wantedWidth || image.Height() != wantedHeight {
+		t.Errorf("image width x height after cropping is %dx%d, wanted %dx%d",
+			image.Width(), image.Height(), origWidth, origHeight)
+		_ = image.Destroy()
+		return
+	}
+
+	if image.VirtualCanvasWidth() != 0 || image.VirtualCanvasHeight() != 0 {
+		t.Errorf("virtual canvas width x height after +repage is %dx%d, wanted %dx%d",
+			image.VirtualCanvasWidth(), image.VirtualCanvasHeight(), 0, 0)
+		_ = image.Destroy()
+		return
+	}
+
+	if err := image.Destroy(); err != nil {
+		t.Errorf("image.Destroy() error = %s", err)
+		return
+	}
+}
+
 func TestShadow(t *testing.T) {
 	image := setupImage(t)
 	err := image.Shadow("#000", 75, 2, 0, 0)
@@ -328,5 +406,58 @@ func TestFullStack(t *testing.T) {
 		os.Remove(filename)
 		err = image.ToFile(filename)
 		assert.T(t, err == nil)
+	}
+}
+
+func TestAutoOrientNeedsToRotate(t *testing.T) {
+	// This file is set so the heart appears to need to be rotated 90 degrees
+	// clockwise. It has EXIF orientation set to indicate that.
+	//
+	// I created it from test/heart_original.png this way:
+	// convert -rotate 270 heart_original.png heart_rotated.jpg
+	// exiftool -Orientation=6 -n heart_rotated.jpg
+	filename := "test/heart_rotated.jpg"
+
+	image, err := NewFromFile(filename)
+	if err != nil {
+		t.Errorf("NewFromFile(%s) = %s", filename, err)
+		return
+	}
+
+	err = image.AutoOrient()
+	if err != nil {
+		_ = image.Destroy()
+		t.Errorf("AutoOrient() = %s", err)
+		return
+	}
+
+	err = image.Destroy()
+	if err != nil {
+		t.Errorf("Destroy() = %s", err)
+		return
+	}
+}
+
+func TestAutoOrientNoNeedToRotate(t *testing.T) {
+	// This file does not need to change.
+	filename := "test/heart_original.png"
+
+	image, err := NewFromFile(filename)
+	if err != nil {
+		t.Errorf("NewFromFile(%s) = %s", filename, err)
+		return
+	}
+
+	err = image.AutoOrient()
+	if err != nil {
+		_ = image.Destroy()
+		t.Errorf("AutoOrient() = %s", err)
+		return
+	}
+
+	err = image.Destroy()
+	if err != nil {
+		t.Errorf("Destroy() = %s", err)
+		return
 	}
 }

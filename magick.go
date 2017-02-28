@@ -283,6 +283,22 @@ func (im *MagickImage) Height() int {
 	return (int)(im.Image.rows)
 }
 
+// VirtualCanvasWidth returns the virtual canvas width.
+//
+// This can be different than the image's width for certain formats, such as
+// GIF. See PlusRepage() for more information.
+func (im *MagickImage) VirtualCanvasWidth() int {
+	return (int)(im.Image.page.width)
+}
+
+// VirtualCanvasHeight returns the virtual canvas height.
+//
+// This can be different than the image's height for certain formats, such as
+// GIF. See PlusRepage() for more information.
+func (im *MagickImage) VirtualCanvasHeight() int {
+	return (int)(im.Image.page.height)
+}
+
 // Type returns the underlying encoding or "magick" of the image as a string
 func (im *MagickImage) Type() (t string) {
 	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
@@ -316,6 +332,31 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 		return &MagickError{"error", "", "could not set property"}
 	}
 	return
+}
+
+// PlusRepage runs the same logic as the +repage command line argument.
+//
+// This removes the virtual canvas metadata. It resets the canvas to match what
+// you cropped.
+//
+// After cropping you may find that the section you cropped is present at the
+// location you cropped it at surrounded on all sides by empty space/pixels.
+// This apparently occurs when the image format allows positioning sections of
+// the image via offsets, such as GIF.
+//
+// See http://www.imagemagick.org/script/command-line-options.php#repage and
+// http://www.imagemagick.org/Usage/crop/#crop_page
+//
+// The latter says: "Always use "+repage" after any 'crop' like operation.
+// Unless you actually need to preserve that info." This means it might be
+// useful for Crop() to call this function.
+func (im *MagickImage) PlusRepage() {
+	geom := C.CString("0x0+0+0")
+	defer C.free(unsafe.Pointer(geom))
+
+	// +repage is a command line option that has no direct API equivalent. See
+	// MagickWand/operation.c for the implementation. I copy that here.
+	C.ParseAbsoluteGeometry(geom, &im.Image.page)
 }
 
 // ParseGeometryToRectangleInfo converts from a geometry string (WxH+X+Y) into a Magick
@@ -456,6 +497,24 @@ func (im *MagickImage) Strip() (err error) {
 		return &MagickError{"error", "", "could not strip image"}
 	}
 	return
+}
+
+// AutoOrient adjusts an image so that its orientation is suitable for
+// viewing (i.e. top-left orientation).
+func (im *MagickImage) AutoOrient() error {
+	exception := C.AcquireExceptionInfo()
+	defer C.DestroyExceptionInfo(exception)
+
+	newImage := C.AutoOrientImage(im.Image, im.Image.orientation, exception)
+
+	failed := C.CheckException(exception)
+	if failed == C.MagickTrue {
+		return ErrorFromExceptionInfo(exception)
+	}
+
+	im.ReplaceImage(newImage)
+
+	return nil
 }
 
 // ToBlob takes a (transformed) MagickImage and returns a byte slice in the format you specify with extension.
