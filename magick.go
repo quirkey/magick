@@ -283,6 +283,22 @@ func (im *MagickImage) Height() int {
 	return (int)(im.Image.rows)
 }
 
+// VirtualCanvasWidth returns the virtual canvas width.
+//
+// This can be different than the image's width for certain formats, such as
+// GIF. See PlusRepage() for more information.
+func (im *MagickImage) VirtualCanvasWidth() int {
+	return (int)(im.Image.page.width)
+}
+
+// VirtualCanvasHeight returns the virtual canvas height.
+//
+// This can be different than the image's height for certain formats, such as
+// GIF. See PlusRepage() for more information.
+func (im *MagickImage) VirtualCanvasHeight() int {
+	return (int)(im.Image.page.height)
+}
+
 // Type returns the underlying encoding or "magick" of the image as a string
 func (im *MagickImage) Type() (t string) {
 	return strings.Trim(string(C.GoBytes(unsafe.Pointer(&im.Image.magick), 4096)), "\x00")
@@ -336,7 +352,7 @@ func (im *MagickImage) SetProperty(prop, value string) (err error) {
 // useful for Crop() to call this function.
 func (im *MagickImage) PlusRepage() {
 	geom := C.CString("0x0+0+0")
-	defer C.free(geom)
+	defer C.free(unsafe.Pointer(geom))
 
 	// +repage is a command line option that has no direct API equivalent. See
 	// MagickWand/operation.c for the implementation. I copy that here.
